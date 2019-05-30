@@ -70,7 +70,7 @@ module.exports = () => {
                 }
             }
         })
-        window.ktalk.listener.dispatchEvent(event)
+        window.ktalk.socketListener.dispatchEvent(event)
     })
 
     return socket
