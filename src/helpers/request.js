@@ -1,9 +1,9 @@
 let requestNo = 1
-function createRequestNo() {
+const createRequestNo = () => {
     return requestNo++
 }
 
-function createRequestDate() {
+const createRequestDate = () => {
     var today = new Date()
     var yyyy = today.getFullYear()
     var mm = today.getMonth() + 1

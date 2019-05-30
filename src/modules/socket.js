@@ -13,6 +13,11 @@ module.exports = () => {
 
     socket = io(endpoint, option)
 
+    socket.sendMessage = message => {
+        console.log('[SEND]', message)
+        socket.emit('knowledgetalk', message)
+    }
+
     socket.on('connect', () => {
         console.log('소켓 연결 성공')
     })
