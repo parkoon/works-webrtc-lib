@@ -1,0 +1,37 @@
+.button {
+    display: inline-block;
+    width: 80px;
+    height: 40px;
+    border: 1px solid #dbdbdb;
+    color: #37474f;
+    cursor: pointer;
+    transition: all 0.2s ease-in;
+    font-weight: bold;
+    text-align: center;
+    line-height: 40px;
+    border-radius: 10px;
+}
+
+.button:hover {
+    background: #37474f;
+    border: 1px solid #37474f;
+    color: white;
+}
+.input::placeholder {
+    color: #37474f;
+    font-size: 15px;
+}
+.input {
+    display: flex;
+    font-size: 17px;
+    border: none;
+    border-bottom: 1px solid #dbdbdb;
+    padding: 10px;
+    margin-bottom: 10px;
+    outline: none;
+    color: #37474f;
+}
+
+hr {
+    margin: 20px 0;
+}

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <link rel="stylesheet" href="index.css" />
+        <script src="../dist/ktalk.min.js"></script>
+        <title>Ktalk</title>
+    </head>
+    <body>
+        <div class="login">
+            <input id="user-id" class="input" type="text" placeholder="Enter your email..." />
+            <input
+                id="user-password"
+                class="input"
+                type="password"
+                value="t"
+                placeholder="Enter your password..."
+            />
+            <div id="login-btn" class="button">Login</div>
+            <div id="logout-btn" class="button">Logout</div>
+        </div>
+
+        <hr />
+
+        <div class="p2p">
+            <video id="local" src="" autoplay></video>
+            <video id="remote" src="" autoplay></video>
+            <div id="user-btn" class="button">Get User</div>
+        </div>
+
+        <script>
+            // const User = new ktalk.User({ type: 'caller' })
+            // ktalk initialize
+
+            ktalk.socketListener.addEventListener('ktalksocketevent', async e => {
+                const { eventOp, signalOp } = e.detail.message
+                // console.log(e.detail.message)
+
+                switch (eventOp || signalOp) {
+                    case 'Invite': {
+                        // 초대 알림창을 개발하시오
+
+                        // Invite도 보내고
+                        // Join도 보내야함
+                        // SDP도 보내야함
+                        // Invite는 응답 안올꺼니까 당황하지 말고
+                        ktalk.sendMessage({
+                            eventOp: 'Invite',
+                            status: 'accept',
+                            roomId: ktalk.getState().user.room
+                        })
+                        ktalk.sendMessage({
+                            eventOp: 'Join',
+                            status: 'accept',
+                            roomId: ktalk.getState().user.room,
+                            reqDate: ktalk.createRequestDate(),
+                            reqNo: ktalk.createRequestNo(),
+                            userId: ktalk.getState().user.id
+                        })
+
+                        await ktalk.setUserMedia({
+                            type: 'caller',
+                            localVideo: document.querySelector('#local'),
+                            remoteVideo: document.querySelector('#remote'),
+                            onicecandidate: e => {
+                                if (e.candidate) {
+                                    ktalk.sendMessage({
+                                        eventOp: 'Candidate',
+                                        reqDate: ktalk.createRequestDate(),
+                                        reqNo: ktalk.createRequestNo(),
+                                        usage: 'cam',
+                                        roomId: ktalk.getState().user.room,
+                                        userId: ktalk.getState().user.id,
+                                        candidate: e.candidate
+                                    })
+                                }
+                            }
+                        })
+
+                        const offer = await ktalk.createOffer()
+                        ktalk.sendMessage({
+                            eventOp: 'SDP',
+                            reqDate: ktalk.createRequestDate(),
+                            reqNo: ktalk.createRequestNo(),
+                            usage: 'cam',
+                            roomId: ktalk.getState().user.room,
+                            sdp: offer
+                        })
+                    }
+
+                    case 'Presence': {
+                        // alert('들어왔네?')
+                        return
+                    }
+
+                    case 'SDP': {
+                        if (e.detail.message.sdp && e.detail.message.sdp.type === 'offer') {
+                            const answer = await ktalk.createAnswer(e.detail.message.sdp) // offer 전달
+                            ktalk.sendMessage({
+                                eventOp: 'SDP',
+                                reqDate: ktalk.createRequestDate(),
+                                reqNo: ktalk.createRequestNo(),
+                                usage: 'cam',
+                                roomId: ktalk.getState().user.room,
+                                sdp: answer
+                            })
+                        } else if (e.detail.message.sdp && e.detail.message.sdp.type === 'answer') {
+                            ktalk.p2pVideoConnectDone(e.detail.message.sdp) // Answer를 보내라
+                        }
+                        return
+                    }
+
+                    case 'Candidate': {
+                        if (e.detail.message.candidate) {
+                            ktalk.setCandidate(e.detail.message.candidate)
+                        }
+                    }
+                }
+            })
+
+            document.querySelector('#user-btn').onclick = async () => {
+                await ktalk.setUserMedia({
+                    type: 'caller',
+                    localVideo: document.querySelector('#local'),
+                    remoteVideo: document.querySelector('#remote'),
+                    onicecandidate: e => {
+                        if (e.candidate) {
+                            ktalk.sendMessage({
+                                eventOp: 'Candidate',
+                                reqDate: ktalk.createRequestDate(),
+                                reqNo: ktalk.createRequestNo(),
+                                usage: 'cam',
+                                roomId: ktalk.getState().user.room,
+                                userId: ktalk.getState().user.id,
+                                candidate: e.candidate
+                            })
+                        }
+                    }
+                })
+
+                const { user } = ktalk.getState()
+                ktalk.sendMessage({
+                    eventOp: 'Call',
+                    userId: 't1',
+                    targetId: ['t2'],
+                    serviceType: 'multi',
+                    reqDeviceType: 'pc',
+                    reqDate: ktalk.createRequestDate(),
+                    reqNo: ktalk.createRequestNo()
+                })
+            }
+
+            document.querySelector('#login-btn').onclick = () => {
+                const id = document.querySelector('#user-id').value
+                const password = document.querySelector('#user-password').value
+
+                ktalk.sendMessage({
+                    eventOp: 'Login',
+                    userId: id,
+                    userPw: ktalk.encryption(password),
+                    reqDate: ktalk.createRequestDate(),
+                    reqNo: ktalk.createRequestNo()
+                })
+            }
+            // document.querySelector('#logout-btn').onclick = () => {
+            //     ktalk.sendMessage({
+            //         eventOp: 'Logout',
+            //         userId: 't1',
+            //         reqDate: 1,
+            //         reqNo: 1
+            //     })
+            // }
+        </script>
+    </body>
+</html>
