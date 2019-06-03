@@ -1,11 +1,22 @@
 const io = require('socket.io-client')
 const CustomEvent = require('custom-event')
-const { setUser } = require('../store')
+const { setUser, getState } = require('../store')
 const dispatch = require('../helpers/event')
+const { createRequestNo, createRequestDate } = require('../helpers/request')
+const { createP2pVideoAnswer, p2pVideoConnectDone, setP2pVideoCandidate } = require('../modules/p2p-video')
+const { captureScreen } = require('../modules/p2p-screen')
 
 // actions
 const LOGIN_SUCCESS = 'LOGIN_SUCCESS'
 const LOGIN_FAILURE = 'LOGIN_FAILURE'
+
+const CALL_FAILURE = 'CALL_FAILURE'
+const CALL_SUCCESS = 'CALL_SUCCESS'
+const CALL_RECEIVE = 'CALL_RECEIVE'
+const CALL_REJECT = 'CALL_REJECT'
+
+const SESSION_RESERVED = 'SESSION_RESERVED'
+const SHARE_FAILURE = 'SHARE_FAILURE'
 
 module.exports = () => {
     const endpoint = 'https://knowledgetalk.co.kr:9000/SignalServer'
@@ -36,8 +47,12 @@ module.exports = () => {
 
     socket.on('knowledgetalk', async data => {
         console.log('[RECEIVE]', data)
-        const { eventOp, code, message } = data
-        switch (eventOp) {
+        const { eventOp, signalOp, code, message } = data
+        switch (eventOp || signalOp) {
+            /**
+             * 로그인 처리
+             * 성공 / 실패
+             */
             case 'Login': {
                 if (code === '200') {
                     const user = {
@@ -62,79 +77,115 @@ module.exports = () => {
                 }
             }
 
+            /**
+             * P2P 비디오
+             */
             case 'Call': {
                 if (code === '200') {
-                    setUser({
+                    return setUser({
                         room: data.roomId
                     })
-
-                    break
+                } else {
+                    return dispatch({
+                        type: CALL_FAILURE,
+                        payload: {
+                            message
+                        }
+                    })
                 }
             }
 
+            case 'Presence': {
+                const { action } = data
+                if (action === 'join') {
+                    return dispatch({
+                        type: CALL_SUCCESS,
+                        payload: {
+                            target: data.userId
+                        }
+                    })
+                }
+
+                if (action === 'reject') {
+                    return dispatch({
+                        type: CALL_REJECT,
+                        payload: {
+                            target: data.userId
+                        }
+                    })
+                }
+
+                return
+            }
+
             case 'Invite': {
-                if (data.roomId) {
-                    setUser({
+                setUser({
+                    target: data.userId,
+                    room: data.roomId
+                })
+                return dispatch({
+                    type: CALL_RECEIVE,
+                    payload: {
+                        target: data.userId,
                         room: data.roomId
-                    })
-                }
-
-                if (data.userId) {
-                    setUser({
-                        target: data.userId
-                    })
-                }
-
-                ktalk.sendMessage({
-                    eventOp: 'Invite',
-                    status: 'accept',
-                    roomId: ktalk.getState().user.room
-                })
-                ktalk.sendMessage({
-                    eventOp: 'Join',
-                    status: 'accept',
-                    roomId: ktalk.getState().user.room,
-                    reqDate: ktalk.createRequestDate(),
-                    reqNo: ktalk.createRequestNo(),
-                    userId: ktalk.getState().user.id
-                })
-
-                await ktalk.setUserMedia({
-                    type: 'caller',
-                    localVideo: document.querySelector('#local'),
-                    remoteVideo: document.querySelector('#remote')
-                })
-
-                const offer = await ktalk.createOffer()
-                ktalk.sendMessage({
-                    eventOp: 'SDP',
-                    reqDate: ktalk.createRequestDate(),
-                    reqNo: ktalk.createRequestNo(),
-                    usage: 'cam',
-                    roomId: ktalk.getState().user.room,
-                    sdp: offer
+                    }
                 })
             }
 
             case 'SDP': {
-                if (data.sdp && data.sdp.type === 'offer') {
-                    const answer = await ktalk.createAnswer(data.sdp) // offer 전달
+                const { sdp, usage } = data
+                if (usage === 'cam' && sdp && sdp.type === 'offer') {
+                    const answer = await createP2pVideoAnswer(sdp) // offer 전달
                     ktalk.sendMessage({
                         eventOp: 'SDP',
-                        reqDate: ktalk.createRequestDate(),
-                        reqNo: ktalk.createRequestNo(),
+                        reqDate: createRequestDate(),
+                        reqNo: createRequestNo(),
                         usage: 'cam',
-                        roomId: ktalk.getState().user.room,
+                        roomId: getState().user.room,
                         sdp: answer
                     })
-                } else if (data.sdp && data.sdp.type === 'answer') {
-                    ktalk.p2pVideoConnectDone(data.sdp) // Answer를 보내라
+                    return
+                }
+                if (usage === 'cam' && sdp && sdp.type === 'answer') {
+                    p2pVideoConnectDone(sdp) // Answer를 보내라
+                    return
+                }
+
+                if (data.usage === 'screen') {
+                    return
                 }
             }
 
             case 'Candidate': {
                 if (data.candidate) {
-                    ktalk.setCandidate(data.candidate)
+                    setP2pVideoCandidate(data.candidate)
+                }
+                return
+            }
+
+            case 'SessionReserve': {
+                if (code === '481') {
+                    return dispatch({
+                        type: SHARE_FAILURE,
+                        payload: {
+                            message: 'connect video p2p first'
+                        }
+                    })
+                }
+
+                CQR
+
+                if (code === '200') {
+                    /**
+                     * 1. session reserve ok (sender)
+                     * 2. capture screen stream (sender)
+                     * 3. create peer (sender)
+                     * 4. add stream to peer (sender)
+                     * 5. create and send offer sdp (sender)
+                     * 6. create peer (receiver)
+                     * 7. set offer sdp (receiver)
+                     * 8. create and send answer sdp (receiver)
+                     */
                 }
             }
         }

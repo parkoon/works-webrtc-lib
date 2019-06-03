@@ -25,9 +25,16 @@
         <hr />
 
         <div class="p2p">
+            <h1>화상채팅</h1>
             <video id="local" src="" autoplay></video>
             <video id="remote" src="" autoplay></video>
-            <div id="start-btn" class="button">START</div>
+            <div id="start-video" class="button">START</div>
+        </div>
+
+        <div>
+            <h1>화면공유</h1>
+            <div id="start-screen-share" class="button">START</div>
+            <div id="stop-screen-share" class="button">STOP</div>
         </div>
 
         <script>
@@ -36,20 +43,42 @@
 
             ktalk.listener.addEventListener('ktalkevent', async e => {
                 console.log('[e.detail.message]', e.detail)
+
+                const { type } = e.detail
                 // 로그인 처리
-                if (e.detail.type === 'LOGIN_SUCCESS') {
-                    alert('로그인 성공')
-                } else {
-                    alert('로그인 실패')
+                if (type === 'LOGIN_SUCCESS') {
+                    console.log('로그인 성공')
+                }
+
+                if (type === 'LOGIN_FAILURE') {
+                    console.log('로그인 실패')
+                }
+
+                if (type === 'CALL_FAILURE') {
+                    console.log('CALL 실패')
+                }
+
+                if (type === 'CALL_RECEIVE') {
+                    ktalk.acceptVideoCall({
+                        localVideo: document.querySelector('#local'),
+                        remoteVideo: document.querySelector('#remote')
+                    })
+                    // ktalk.rejectVideoCall()
+                    // console.log('콜 받을래?')
                 }
             })
 
-            document.querySelector('#start-btn').onclick = async () => {
-                await ktalk.setUserMedia({
+            document.querySelector('#start-video').onclick = () => {
+                ktalk.sendVideoCall({
                     type: 'caller',
                     localVideo: document.querySelector('#local'),
                     remoteVideo: document.querySelector('#remote')
                 })
+            }
+
+            document.querySelector('#start-screen-share').onclick = () => {
+                ktalk.startScreenShare()
+                alert('z')
             }
 
             document.querySelector('#login-btn').onclick = () => {
