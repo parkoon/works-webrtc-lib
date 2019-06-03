@@ -8,6 +8,8 @@ const {
     setCandidate,
     setUserMedia
 } = require('./modules/p2p-video')
+
+const { login } = require('./modules/auth')
 const { createRequestDate, createRequestNo } = require('./helpers/request')
 
 /** main */
@@ -25,7 +27,7 @@ window.ktalk.encryption = encryption
 
 /** socket */
 window.ktalk.sendMessage = socket.sendMessage
-window.ktalk.socketListener = document.createElement('div')
+window.ktalk.listener = document.createElement('div')
 
 /** p2p video connection */
 window.ktalk.setUserMedia = setUserMedia
@@ -33,3 +35,6 @@ window.ktalk.createOffer = createOffer
 window.ktalk.createAnswer = createAnswer
 window.ktalk.p2pVideoConnectDone = p2pVideoConnectDone
 window.ktalk.setCandidate = setCandidate
+
+/** auth */
+window.ktalk.login = login

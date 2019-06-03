@@ -1,3 +1,5 @@
+const { setPeer, getState } = require('../store')
+
 /**
  *
  * @param {Object} option
@@ -8,7 +10,7 @@
  */
 function setUserMedia(option) {
     return new Promise(async (resolve, reject) => {
-        const { localVideo, remoteVideo, onicecandidate, type } = option
+        const { localVideo, remoteVideo, type } = option
         const configuration = {
             iceServers: [{ url: 'stun:stun2.1.google.com:19302' }]
         }
@@ -25,7 +27,19 @@ function setUserMedia(option) {
                     // alert('!!')
                 }
 
-                peer.onicecandidate = onicecandidate
+                peer.onicecandidate = e => {
+                    if (e.candidate) {
+                        ktalk.sendMessage({
+                            eventOp: 'Candidate',
+                            reqDate: ktalk.createRequestDate(),
+                            reqNo: ktalk.createRequestNo(),
+                            usage: 'cam',
+                            roomId: ktalk.getState().user.room,
+                            userId: ktalk.getState().user.id,
+                            candidate: e.candidate
+                        })
+                    }
+                }
 
                 const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 peer.addStream(localStream)
@@ -46,6 +60,15 @@ function setUserMedia(option) {
             reject('type field required')
         }
 
+        ktalk.sendMessage({
+            eventOp: 'Call',
+            userId: 't1',
+            targetId: ['t2'],
+            serviceType: 'multi',
+            reqDeviceType: 'pc',
+            reqDate: ktalk.createRequestDate(),
+            reqNo: ktalk.createRequestNo()
+        })
         resolve()
 
         // Call을 날려야함!
