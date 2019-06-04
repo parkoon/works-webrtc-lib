@@ -42,6 +42,7 @@
 
         <div id="file-share-field">
             <h1>파일공유</h1>
+            <div id="file-list"></div>
         </div>
 
         <script>
@@ -68,6 +69,20 @@
                     })
                     // ktalk.rejectVideoCall()
                     // console.log('콜 받을래?')
+                }
+
+                if (type === 'FILE_UPLOAD_SUCCESS') {
+                    const { results } = e.detail.payload
+
+                    results.forEach(result => {
+                        const imgElement = document.createElement('img')
+                        imgElement.src = result.url
+                        imgElement.addEventListener(
+                            'click',
+                            ktalk.fileShareHandler.bind(imgElement, result.url)
+                        )
+                        document.querySelector('#file-list').appendChild(imgElement)
+                    })
                 }
             })
 

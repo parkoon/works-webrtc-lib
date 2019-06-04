@@ -8,7 +8,7 @@ const { startScreenShare, stopScreenShare, acceptScreenShare } = require('./modu
 const { login, logout } = require('./modules/auth')
 const { createRequestDate, createRequestNo } = require('./helpers/request')
 
-const { createInput } = require('./modules/file')
+const { createInput, fileShareHandler } = require('./modules/file')
 
 /** main */
 window.ktalk = {}
@@ -43,4 +43,4 @@ window.ktalk.logout = logout
 
 /** file share */
 window.ktalk.input = createInput()
-console.log('input', ktalk.input)
+window.ktalk.fileShareHandler = fileShareHandler

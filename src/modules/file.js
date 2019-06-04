@@ -3,10 +3,16 @@ const axios = require('axios')
 const { UPLOAD_API } = require('../constants/file')
 const dispatch = require('../helpers/event')
 const pdfjs = require('../helpers/pdf')
-const { FILE_SHARE_REQUEST, FILE_SHARE_SUCCESS, FILE_SHARE_FAILURE } = require('../constants/actions')
+const {
+    FILE_SHARE_REQUEST,
+    FILE_SHARE_SUCCESS,
+    FILE_SHARE_FAILURE,
+    FILE_UPLOAD_SUCCESS,
+    FILE_UPLOAD_FAILURE
+} = require('../constants/actions')
 
 const pdfRegExp = /([a-zA-Z0-9\s_\\.\-\(\):])+(.pdf)$/i
-const vaildFileRegExp = /([a-zA-Z0-9\s_\\.\-\(\):])+(.jpg|.gif|.png|.pdf)$/i
+const vaildFileRegExp = /([a-zA-Z0-9\s_\\.\-\(\):])+(.jpg|.gif|.png|.pdf|.jpeg)$/i
 
 const handleClick = el => {
     el.value = ''
@@ -65,7 +71,7 @@ const handleChange = async ({ target }) => {
                 return dispatch({
                     type: FILE_SHARE_FAILURE,
                     payload: {
-                        message: 'invaild file, only .jpg .gif .png .pdf file valid'
+                        message: 'invaild file, valid file extention: .jpg .gif .png .jpeg .pdf'
                     }
                 })
             }
@@ -100,19 +106,36 @@ const handleChange = async ({ target }) => {
         console.log('========= LOG END =========')
 
         dispatch({
-            type: FILE_SHARE_REQUEST,
+            type: FILE_UPLOAD_SUCCESS,
             payload: {
                 results: data
             }
         })
     } catch (err) {
         dispatch({
-            type: FILE_SHARE_FAILURE,
+            type: FILE_UPLOAD_FAILURE,
             payload: {
-                message: err
+                message: 'file server error'
             }
         })
     }
+}
+
+// this 를 사용하기 위해 function 키워드 사용
+export function fileShareHandler(url) {
+    const imgURL = (this && this.src) || url
+
+    if (!imgURL) {
+        return dispatch({
+            type: FILE_SHARE_FAILURE,
+            payload: {
+                message: 'bind image element and pass url parameter'
+            }
+        })
+    }
+
+    // 파일 공유!
+    console.log('this', this.src, url)
 }
 
 export const createInput = () => {
