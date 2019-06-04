@@ -5,6 +5,9 @@ export let state = {
         room: '',
         target: ''
     },
+    loading: {
+        call: false
+    },
     p2pVideoPeer: {
         instance: '',
         localStream: '',
@@ -27,9 +30,30 @@ export const setUser = user => {
         },
         p2pScreenPeer: {
             ...state.p2pScreenPeer
+        },
+        loading: {
+            ...state.loading
         }
     }
-    console.log('[STATE UPDATE]', state)
+    // console.log('[STATE UPDATE]', state)
+}
+export const setLoading = loading => {
+    state = {
+        user: {
+            ...state.user
+        },
+        p2pVideoPeer: {
+            ...state.p2pVideoPeer
+        },
+        p2pScreenPeer: {
+            ...state.p2pScreenPeer
+        },
+        loading: {
+            ...state.loading,
+            ...loading
+        }
+    }
+    // console.log('[STATE UPDATE]', state)
 }
 
 export const setP2pVideoPeer = peer => {
@@ -43,9 +67,12 @@ export const setP2pVideoPeer = peer => {
         },
         p2pScreenPeer: {
             ...state.p2pScreenPeer
+        },
+        loading: {
+            ...state.loading
         }
     }
-    console.log('[STATE UPDATE]', state)
+    // console.log('[STATE UPDATE]', state)
 }
 
 export const setP2pScreenPeer = peer => {
@@ -59,9 +86,12 @@ export const setP2pScreenPeer = peer => {
         },
         p2pVideoPeer: {
             ...state.p2pVideoPeer
+        },
+        loading: {
+            ...state.loading
         }
     }
-    console.log('[STATE UPDATE]', state)
+    // console.log('[STATE UPDATE]', state)
 }
 
 export const getState = () => {

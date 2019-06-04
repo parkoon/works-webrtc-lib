@@ -1,6 +1,6 @@
 const io = require('socket.io-client')
 const CustomEvent = require('custom-event')
-const { setUser, getState, setP2pScreenPeer } = require('../store')
+const { setUser, getState, setP2pScreenPeer, setLoading, setP2pVideoPeer } = require('../store')
 const dispatch = require('../helpers/event')
 const { createRequestNo, createRequestDate } = require('../helpers/request')
 const {
@@ -19,35 +19,29 @@ const {
     clearScreenStream
 } = require('../modules/p2p-screen')
 
-// actions
-const LOGIN_SUCCESS = 'LOGIN_SUCCESS'
-const LOGIN_FAILURE = 'LOGIN_FAILURE'
+const {
+    LOGIN_SUCCESS,
+    LOGIN_FAILURE,
+    CALL_FAILURE,
+    CALL_RECEIVE,
+    CALL_REJECT,
+    CALL_ACCEPT,
+    CALL_STOP_SUCCESS,
+    CALL_STOP_FAILURE,
+    SCREEN_REQUEST,
+    SHARE_FAILURE,
+    SCREEN_RECEIVE,
+    SCREEN_STOP_SUCCESS,
+    SCREEN_STOP_FAILURE
+} = require('../constants/actions')
 
-const CALL_FAILURE = 'CALL_FAILURE'
-const CALL_SUCCESS = 'CALL_SUCCESS'
-const CALL_RECEIVE = 'CALL_RECEIVE'
-const CALL_REJECT = 'CALL_REJECT'
-const CALL_STOP = 'CALL_STOP'
-
-const SESSION_RESERVED = 'SESSION_RESERVED'
-const SHARE_FAILURE = 'SHARE_FAILURE'
-
-const SCREEN_SHARE_START = 'SCREEN_SHARE_START'
-const SCREEN_SHARE_STOP = 'SCREEN_SHARE_STOP'
+const { endpoint, option } = require('../constants/socket')
 
 module.exports = () => {
-    const endpoint = 'https://knowledgetalk.co.kr:9000/SignalServer'
-    const option = {
-        secure: true,
-        reconnect: true,
-        rejectUnauthorized: false,
-        transports: ['websocket']
-    }
-
     socket = io(endpoint, option)
 
     socket.sendMessage = data => {
-        // console.log('[SEND]', data)
+        console.log('[SEND]', data)
         socket.emit('knowledgetalk', data)
     }
 
@@ -63,7 +57,7 @@ module.exports = () => {
     })
 
     socket.on('knowledgetalk', async data => {
-        // console.log('[RECEIVE]', data)
+        console.log('[RECEIVE]', data)
         const { eventOp, signalOp, code, message } = data
         switch (eventOp || signalOp) {
             /**
@@ -98,25 +92,45 @@ module.exports = () => {
              * P2P 비디오
              */
             case 'Call': {
+                // call success
                 if (code === '200') {
                     return setUser({
                         room: data.roomId
                     })
-                } else {
+                }
+
+                // target을 찾을 수 없음
+                if (code === '561') {
+                    /**
+                     * 1. call loading 풀어주기
+                     * 2. local stream 제거
+                     * 3. p2p video peer state 초기화
+                     * 4. target 초기화
+                     */
+                    const { user } = getState()
+                    setUser({ target: '' })
+                    clearVideoStream(getState().p2pVideoPeer.localStream)
+                    setP2pVideoPeer({
+                        instance: '',
+                        localStream: '',
+                        remoteStream: ''
+                    })
                     return dispatch({
                         type: CALL_FAILURE,
                         payload: {
-                            message
+                            message: `cannot find tartget(${user.target})`
                         }
                     })
                 }
+
+                return
             }
 
             case 'Presence': {
                 const { action } = data
                 if (action === 'join') {
                     return dispatch({
-                        type: CALL_SUCCESS,
+                        type: CALL_ACCEPT,
                         payload: {
                             target: data.userId
                         }
@@ -132,12 +146,22 @@ module.exports = () => {
                     })
                 }
 
-                if (action === 'end') {
-                    const { p2pVideoPeer } = getState()
+                if (action === 'end' || action === 'exit') {
+                    const { p2pVideoPeer, user } = getState()
                     clearVideoStream(p2pVideoPeer.localStream)
                     clearVideoStream(p2pVideoPeer.remoteStream)
-                    return dispatch({
-                        type: CALL_STOP
+
+                    setUser({
+                        room: ''
+                    })
+
+                    return ktalk.sendMessage({
+                        eventOp: 'ExitRoom',
+                        roomId: user.room,
+                        reqDate: createRequestDate(),
+                        reqNo: createRequestNo(),
+                        userId: user.id,
+                        userName: user.id
                     })
                 }
 
@@ -145,6 +169,10 @@ module.exports = () => {
             }
 
             case 'Invite': {
+                /**
+                 * 1. set state
+                 * 2. CALL_RECEIVE 액션을 보내고, 라이브러리 사용자는 수락(acceptVideoCall) 또는 거절(rejectVideoCall)
+                 */
                 setUser({
                     target: data.userId,
                     room: data.roomId
@@ -152,23 +180,24 @@ module.exports = () => {
                 return dispatch({
                     type: CALL_RECEIVE,
                     payload: {
-                        target: data.userId,
-                        room: data.roomId
+                        target: data.userId
                     }
                 })
             }
 
             case 'SDP': {
                 const { sdp, usage } = data
+                const { user } = getState()
+
                 if (usage === 'cam' && sdp && sdp.type === 'offer') {
-                    const answer = await createP2pVideoAnswer(sdp) // offer 전달
                     ktalk.sendMessage({
                         eventOp: 'SDP',
                         reqDate: createRequestDate(),
                         reqNo: createRequestNo(),
                         usage: 'cam',
-                        roomId: getState().user.room,
-                        sdp: answer
+                        roomId: user.room,
+                        userId: user.id,
+                        sdp: await createP2pVideoAnswer(sdp)
                     })
                     return
                 }
@@ -180,34 +209,15 @@ module.exports = () => {
                 if (data.usage === 'screen' && sdp && sdp.type === 'offer') {
                     // create peer (receiver)
                     dispatch({
-                        type: SCREEN_SHARE_START,
+                        type: SCREEN_RECEIVE,
                         payload: {
-                            tartget: getState().user.target
+                            tartget: user.target
                         }
                     })
 
-                    try {
-                        const peer = await setScreenPeerConnection()
-
-                        setP2pScreenPeer({
-                            instance: peer
-                        })
-
-                        // set offer sdp (receiver)
-                        // create and send answer sdp (receiver)
-                        const answer = await createP2pScreenAnswer(sdp)
-
-                        return ktalk.sendMessage({
-                            eventOp: 'SDP',
-                            reqDate: createRequestDate(),
-                            reqNo: createRequestNo(),
-                            usage: 'screen',
-                            roomId: getState().user.room,
-                            sdp: answer
-                        })
-                    } catch (err) {
-                        console.error(err)
-                    }
+                    // offer를 처리하는 시점이 맞지 않아, window 객체에 임시로 할당
+                    // 사용하고 지움
+                    window.__screen__offer = sdp
                     return
                 }
 
@@ -238,7 +248,7 @@ module.exports = () => {
                     })
                 }
                 // 상대방이 공유 자원을 사용하고 있음
-                if (code === '441') {
+                if (code === '440') {
                     return dispatch({
                         type: SHARE_FAILURE,
                         payload: {
@@ -264,6 +274,7 @@ module.exports = () => {
                     try {
                         // capture screen stream
                         const stream = await captureScreen()
+                        const { user } = getState()
 
                         // create peer
                         const peer = await setScreenPeerConnection(stream)
@@ -281,7 +292,8 @@ module.exports = () => {
                             reqDate: createRequestDate(),
                             reqNo: createRequestNo(),
                             usage: 'screen',
-                            roomId: getState().user.room,
+                            roomId: user.room,
+                            userId: user.id,
                             sdp: offer
                         })
                     } catch (err) {
@@ -290,9 +302,23 @@ module.exports = () => {
                 }
                 return
             }
+
+            case 'ScreenShareConferenceEnd': {
+                if (code === '200') {
+                    dispatch({
+                        type: SCREEN_STOP_SUCCESS
+                    })
+                } else {
+                    dispatch({
+                        type: SCREEN_STOP_FAILURE
+                    })
+                }
+                return
+            }
+
             case 'ScreenShareConferenceEndSvr': {
                 dispatch({
-                    type: 'SCREEN_SHARE_STOP',
+                    type: SCREEN_STOP_SUCCESS,
                     target: data.userId
                 })
                 clearScreenStream(getState().p2pScreenPeer.stream)
@@ -300,6 +326,23 @@ module.exports = () => {
             }
 
             case 'ExitRoom': {
+                if (code === '200') {
+                    setP2pVideoPeer({
+                        instance: '',
+                        localStream: '',
+                        remoteStream: ''
+                    })
+                    return dispatch({
+                        type: CALL_STOP_SUCCESS
+                    })
+                } else {
+                    return dispatch({
+                        type: CALL_STOP_FAILURE,
+                        payload: {
+                            message: 'start video call first'
+                        }
+                    })
+                }
                 return
             }
         }

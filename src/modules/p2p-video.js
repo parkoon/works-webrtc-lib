@@ -1,5 +1,15 @@
-const { setP2pVideoPeer, getState, setUser } = require('../store')
+const { setP2pVideoPeer, getState, setUser, setLoading } = require('../store')
 const { createRequestDate, createRequestNo } = require('../helpers/request')
+const {
+    CALL_FAILURE,
+    CALL_SUCCESS,
+    CALL_REQUEST,
+    CALL_ACCEPT,
+    CALL_REJECT,
+    CALL_STOP_REQUEST
+} = require('../constants/actions')
+const dispatch = require('../helpers/event')
+const { configuration } = require('../constants/webrtc')
 
 /**
  *
@@ -9,21 +19,71 @@ const { createRequestDate, createRequestNo } = require('../helpers/request')
  * @param {String} option.type // required
  * @param {Function} option.onicecnadidate // required
  */
-const sendVideoCall = async option => {
-    const { localVideo, remoteVideo } = option
+const startVideoCall = async option => {
+    const { localVideo, remoteVideo, target } = option
+    // const { loading } = getState()
+    // if (loading.call) {
+    //     return dispatch({
+    //         type: CALL_FAILURE,
+    //         payload: {
+    //             message: 'start call already'
+    //         }
+    //     })
+    // }
+
+    // Parameter validation
+    if (!localVideo || !remoteVideo) {
+        return dispatch({
+            type: CALL_FAILURE,
+            payload: {
+                message: 'localVideo, remoteVideo(video element) parameter required'
+            }
+        })
+    }
+
+    if (!target) {
+        return dispatch({
+            type: CALL_FAILURE,
+            payload: {
+                message: 'target parameter require'
+            }
+        })
+    }
+
+    setUser({ target })
+    dispatch({
+        type: CALL_REQUEST,
+        payload: {
+            target
+        }
+    })
 
     try {
-        await setUserMedia(localVideo, remoteVideo)
+        /**
+         * 1. init peer connection
+         * 2. create video stream
+         * 3. set stream to peer
+         * 4. send call(eventOP) message
+         */
+        const peer = await initVideoPeer(localVideo, remoteVideo)
+        const stream = await createVideoStream()
+        peer.addStream(stream)
+        localVideo.srcObject = stream
+        // await setUserMedia(localVideo, remoteVideo)
 
-        setUser({
-            target: 't2'
+        setP2pVideoPeer({
+            instance: peer,
+            localStream: stream
         })
+
+        // setLoading({
+        //     call: true
+        // })
 
         ktalk.sendMessage({
             eventOp: 'Call',
             userId: 't1',
             targetId: ['t2'],
-            serviceType: 'multi',
             reqDeviceType: 'pc',
             reqDate: createRequestDate(),
             reqNo: createRequestNo()
@@ -33,13 +93,19 @@ const sendVideoCall = async option => {
     }
 }
 
-const setUserMedia = (localVideo, remoteVideo) => {
+const createVideoStream = () => {
     return new Promise(async (resolve, reject) => {
-        const configuration = {
-            iceServers: [{ url: 'stun:stun2.1.google.com:19302' }]
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            resolve(stream)
+        } catch (err) {
+            reject(err)
         }
+    })
+}
 
-        // Handle caller
+const initVideoPeer = (localVideo, remoteVideo) => {
+    return new Promise((resolve, reject) => {
         try {
             const peer = new RTCPeerConnection(configuration)
 
@@ -47,6 +113,10 @@ const setUserMedia = (localVideo, remoteVideo) => {
                 remoteVideo.srcObject = stream
                 setP2pVideoPeer({
                     remoteStream: stream
+                })
+
+                dispatch({
+                    type: CALL_SUCCESS
                 })
             }
 
@@ -63,23 +133,8 @@ const setUserMedia = (localVideo, remoteVideo) => {
                     })
                 }
             }
-
-            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-            peer.addStream(localStream)
-            localVideo.srcObject = localStream
-
-            // 영상 종료
-            localStream.getVideoTracks()[0].onended = () => {}
-
-            setP2pVideoPeer({
-                instance: peer,
-                localStream
-            })
-
-            resolve()
+            resolve(peer)
         } catch (err) {
-            console.log('Error in sendVideoCall', err)
-
             reject(err)
         }
     })
@@ -125,44 +180,79 @@ const p2pVideoConnectDone = answer => {
 // Set candidate
 const setP2pVideoCandidate = candidate => {
     const { p2pVideoPeer } = getState()
+
     if (candidate) {
         p2pVideoPeer.instance.addIceCandidate(new RTCIceCandidate(candidate))
     }
 }
 
 const acceptVideoCall = async ({ localVideo, remoteVideo }) => {
+    // Parameter validation
+    if (!localVideo || !remoteVideo) {
+        return dispatch({
+            type: CALL_FAILURE,
+            payload: {
+                message: 'localVideo, remoteVideo(video element) parameter required'
+            }
+        })
+    }
+
+    dispatch({
+        type: CALL_ACCEPT
+    })
+
+    const { user } = getState()
     ktalk.sendMessage({
         eventOp: 'Invite',
         status: 'accept',
-        roomId: getState().user.room
+        roomId: user.room
     })
 
     ktalk.sendMessage({
         eventOp: 'Join',
         status: 'accept',
-        roomId: getState().user.room,
+        roomId: user.room,
         reqDate: createRequestDate(),
         reqNo: createRequestNo(),
-        userId: getState().user.id
+        userId: user.id
     })
 
     try {
-        await setUserMedia(localVideo, remoteVideo)
+        /**
+         * 1. init peer connection
+         * 2. create video stream
+         * 3. set stream to peer
+         * 4. create and send offer
+         */
+        const peer = await initVideoPeer(localVideo, remoteVideo)
+        const stream = await createVideoStream()
+        peer.addStream(stream)
+        localVideo.srcObject = stream
+        // await setUserMedia(localVideo, remoteVideo)
+
+        setP2pVideoPeer({
+            instance: peer,
+            localStream: stream
+        })
+
+        ktalk.sendMessage({
+            eventOp: 'SDP',
+            reqDate: createRequestDate(),
+            reqNo: createRequestNo(),
+            usage: 'cam',
+            roomId: user.room,
+            userId: user.id,
+            sdp: await createP2pVideoOffer()
+        })
     } catch (err) {
         console.error(err)
     }
-
-    const offer = await createP2pVideoOffer()
-    ktalk.sendMessage({
-        eventOp: 'SDP',
-        reqDate: createRequestDate(),
-        reqNo: createRequestNo(),
-        usage: 'cam',
-        roomId: getState().user.room,
-        sdp: offer
-    })
 }
 const rejectVideoCall = () => {
+    dispatch({
+        type: CALL_REJECT
+    })
+
     ktalk.sendMessage({
         eventOp: 'Invite',
         status: 'reject',
@@ -181,6 +271,12 @@ const rejectVideoCall = () => {
 
 const stopVideoCall = () => {
     const { user, p2pVideoPeer } = getState()
+    setUser({
+        room: ''
+    })
+    dispatch({
+        type: CALL_STOP_REQUEST
+    })
     ktalk.sendMessage({
         eventOp: 'ExitRoom',
         roomId: user.room,
@@ -199,7 +295,6 @@ const clearVideoStream = stream => {
     try {
         stream.getTracks().forEach(track => {
             track.stop()
-            track.dispatchEvent(new Event('ended'))
             console.log(`${track.kind} (id: ${track.id}) is stop!`)
         })
     } catch (err) {
@@ -212,7 +307,7 @@ module.exports = {
     createP2pVideoAnswer,
     p2pVideoConnectDone,
     setP2pVideoCandidate,
-    sendVideoCall,
+    startVideoCall,
     acceptVideoCall,
     rejectVideoCall,
     clearVideoStream,

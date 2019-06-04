@@ -2,6 +2,15 @@ const { getState, setP2pScreenPeer } = require('../store')
 const { createRequestDate, createRequestNo } = require('../helpers/request')
 const { configuration } = require('../constants/webrtc')
 const dispatch = require('../helpers/event')
+const {
+    SCREEN_REQUEST,
+    SCREEN_SUCCESS,
+    SCREEN_STOP_SUCCESS,
+    SCREEN_STOP_REQUEST,
+    SHARE_FAILURE
+} = require('../constants/actions')
+
+let __k__talk__screen
 
 const setScreenPeerConnection = stream => {
     return new Promise(async (resolve, reject) => {
@@ -12,7 +21,10 @@ const setScreenPeerConnection = stream => {
                 setP2pScreenPeer({
                     stream
                 })
-                document.querySelector('#local-screen').srcObject = stream
+                dispatch({
+                    type: SCREEN_SUCCESS
+                })
+                __k__talk__screen.srcObject = stream
             }
 
             peer.onicecandidate = e => {
@@ -33,13 +45,9 @@ const setScreenPeerConnection = stream => {
 
             if (stream) {
                 peer.addStream(stream)
-                document.querySelector('#local-screen').srcObject = stream
+                __k__talk__screen.srcObject = stream
 
-                stream.getVideoTracks()[0].onended = () => {
-                    dispatch({
-                        type: 'SCREEN_SHARE_STOP'
-                    })
-                }
+                stream.getVideoTracks()[0].onended = stopScreenShare
             }
 
             resolve(peer)
@@ -64,6 +72,7 @@ const clearScreenStream = stream => {
 // Set candidate
 const setP2pScreenCandidate = candidate => {
     const { p2pScreenPeer } = getState()
+
     if (candidate) {
         p2pScreenPeer.instance.addIceCandidate(new RTCIceCandidate(candidate))
     }
@@ -100,9 +109,64 @@ const createP2pScreenAnswer = offer => {
     })
 }
 
-const startScreenShare = () => {
+const acceptScreenShare = async ({ screen }) => {
+    if (!screen) {
+        return dispatch({
+            type: SHARE_FAILURE,
+            payload: {
+                message: 'screen(video element) parameter  required'
+            }
+        })
+    }
+
+    __k__talk__screen = screen
+
+    try {
+        const peer = await setScreenPeerConnection()
+
+        setP2pScreenPeer({
+            instance: peer
+        })
+
+        // set offer sdp (receiver)
+        // create and send answer sdp (receiver)
+        const answer = await createP2pScreenAnswer(window.__screen__offer)
+        delete window.__screen__offer
+
+        const { user } = getState()
+
+        return ktalk.sendMessage({
+            eventOp: 'SDP',
+            reqDate: createRequestDate(),
+            reqNo: createRequestNo(),
+            usage: 'screen',
+            roomId: user.room,
+            userId: user.id,
+            sdp: answer
+        })
+    } catch (err) {
+        console.error(err)
+    }
+}
+
+const startScreenShare = ({ screen }) => {
+    if (!screen) {
+        return dispatch({
+            type: SHARE_FAILURE,
+            payload: {
+                message: 'screen(video element) parameter  required'
+            }
+        })
+    }
+
     const { user } = getState()
     // 세션 체크
+
+    __k__talk__screen = screen
+
+    dispatch({
+        type: SCREEN_REQUEST
+    })
 
     ktalk.sendMessage({
         eventOp: 'SessionReserve',
@@ -111,14 +175,15 @@ const startScreenShare = () => {
         userId: user.id,
         roomId: user.room
     })
-
-    // if (p2pScreenPeer.session)
-    // getState
 }
 
 const p2pScreenConnectDone = answer => {
     const { p2pScreenPeer } = getState()
     p2pScreenPeer.instance.setRemoteDescription(answer)
+
+    dispatch({
+        type: SCREEN_SUCCESS
+    })
 }
 
 const captureScreen = () => {
@@ -136,7 +201,7 @@ const captureScreen = () => {
 
             resolve(stream)
         } catch (err) {
-            reject(err)
+            stopScreenShare()
         }
     })
 }
@@ -144,6 +209,10 @@ const captureScreen = () => {
 const stopScreenShare = () => {
     const { p2pScreenPeer, user } = getState()
     clearScreenStream(p2pScreenPeer.stream)
+
+    dispatch({
+        type: SCREEN_STOP_REQUEST
+    })
 
     ktalk.sendMessage({
         eventOp: 'SessionReserveEnd',
@@ -171,5 +240,6 @@ module.exports = {
     createP2pScreenAnswer,
     p2pScreenConnectDone,
     setP2pScreenCandidate,
-    clearScreenStream
+    clearScreenStream,
+    acceptScreenShare
 }

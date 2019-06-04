@@ -26,6 +26,7 @@
 
         <div class="p2p">
             <h1>화상채팅</h1>
+            <input id="target" class="input" type="text" placeholder="Enter target id..." value="t2" />
             <video id="local" src="" autoplay></video>
             <video id="remote" src="" autoplay></video>
             <div id="start-video" class="button">START</div>
@@ -44,20 +45,15 @@
             // ktalk initialize
 
             ktalk.listener.addEventListener('ktalkevent', async e => {
-                console.log('[e.detail.message]', e.detail)
+                console.log(`%c ${JSON.stringify(e.detail)} `, 'background: #222; color: #bada55')
 
                 const { type } = e.detail
                 // 로그인 처리
-                if (type === 'LOGIN_SUCCESS') {
-                    console.log('로그인 성공')
-                }
 
-                if (type === 'LOGIN_FAILURE') {
-                    console.log('로그인 실패')
-                }
-
-                if (type === 'CALL_FAILURE') {
-                    console.log('CALL 실패')
+                if (type === 'SCREEN_RECEIVE') {
+                    ktalk.acceptScreenShare({
+                        screen: document.querySelector('#local-screen')
+                    })
                 }
 
                 if (type === 'CALL_RECEIVE') {
@@ -71,8 +67,8 @@
             })
 
             document.querySelector('#start-video').onclick = () => {
-                ktalk.sendVideoCall({
-                    type: 'caller',
+                ktalk.startVideoCall({
+                    target: document.querySelector('#target').value,
                     localVideo: document.querySelector('#local'),
                     remoteVideo: document.querySelector('#remote')
                 })
@@ -83,7 +79,9 @@
             }
 
             document.querySelector('#start-screen-share').onclick = () => {
-                ktalk.startScreenShare()
+                ktalk.startScreenShare({
+                    screen: document.querySelector('#local-screen')
+                })
             }
             document.querySelector('#stop-screen-share').onclick = () => {
                 ktalk.stopScreenShare()
@@ -98,14 +96,9 @@
                     password
                 })
             }
-            // document.querySelector('#logout-btn').onclick = () => {
-            //     ktalk.sendMessage({
-            //         eventOp: 'Logout',
-            //         userId: 't1',
-            //         reqDate: 1,
-            //         reqNo: 1
-            //     })
-            // }
+            document.querySelector('#logout-btn').onclick = () => {
+                ktalk.logout()
+            }
         </script>
     </body>
 </html>
