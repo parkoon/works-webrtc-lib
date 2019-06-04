@@ -29,10 +29,12 @@
             <video id="local" src="" autoplay></video>
             <video id="remote" src="" autoplay></video>
             <div id="start-video" class="button">START</div>
+            <div id="stop-video" class="button">STOP</div>
         </div>
 
         <div>
             <h1>화면공유</h1>
+            <video id="local-screen" src="" autoplay></video>
             <div id="start-screen-share" class="button">START</div>
             <div id="stop-screen-share" class="button">STOP</div>
         </div>
@@ -76,9 +78,15 @@
                 })
             }
 
+            document.querySelector('#stop-video').onclick = () => {
+                ktalk.stopVideoCall()
+            }
+
             document.querySelector('#start-screen-share').onclick = () => {
                 ktalk.startScreenShare()
-                alert('z')
+            }
+            document.querySelector('#stop-screen-share').onclick = () => {
+                ktalk.stopScreenShare()
             }
 
             document.querySelector('#login-btn').onclick = () => {

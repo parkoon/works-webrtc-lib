@@ -45,6 +45,9 @@ const setUserMedia = (localVideo, remoteVideo) => {
 
             peer.onaddstream = ({ stream }) => {
                 remoteVideo.srcObject = stream
+                setP2pVideoPeer({
+                    remoteStream: stream
+                })
             }
 
             peer.onicecandidate = e => {
@@ -61,9 +64,12 @@ const setUserMedia = (localVideo, remoteVideo) => {
                 }
             }
 
-            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             peer.addStream(localStream)
             localVideo.srcObject = localStream
+
+            // 영상 종료
+            localStream.getVideoTracks()[0].onended = () => {}
 
             setP2pVideoPeer({
                 instance: peer,
@@ -173,6 +179,34 @@ const rejectVideoCall = () => {
     })
 }
 
+const stopVideoCall = () => {
+    const { user, p2pVideoPeer } = getState()
+    ktalk.sendMessage({
+        eventOp: 'ExitRoom',
+        roomId: user.room,
+        reqDate: createRequestDate(),
+        reqNo: createRequestNo(),
+        userId: user.id,
+        userName: user.id
+    })
+
+    clearVideoStream(p2pVideoPeer.localStream)
+    clearVideoStream(p2pVideoPeer.remoteStream)
+}
+
+const clearVideoStream = stream => {
+    if (!stream) return
+    try {
+        stream.getTracks().forEach(track => {
+            track.stop()
+            track.dispatchEvent(new Event('ended'))
+            console.log(`${track.kind} (id: ${track.id}) is stop!`)
+        })
+    } catch (err) {
+        console.error(err)
+    }
+}
+
 module.exports = {
     createP2pVideoOffer,
     createP2pVideoAnswer,
@@ -180,5 +214,7 @@ module.exports = {
     setP2pVideoCandidate,
     sendVideoCall,
     acceptVideoCall,
-    rejectVideoCall
+    rejectVideoCall,
+    clearVideoStream,
+    stopVideoCall
 }
