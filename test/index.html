@@ -40,9 +40,14 @@
             <div id="stop-screen-share" class="button">STOP</div>
         </div>
 
+        <div id="file-share-field">
+            <h1>파일공유</h1>
+        </div>
+
         <script>
             // const User = new ktalk.User({ type: 'caller' })
             // ktalk initialize
+            document.querySelector('#file-share-field').appendChild(window.ktalk.input)
 
             ktalk.listener.addEventListener('ktalkevent', async e => {
                 console.log(`%c ${JSON.stringify(e.detail)} `, 'background: #222; color: #bada55')
