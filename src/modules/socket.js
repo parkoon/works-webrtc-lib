@@ -19,6 +19,8 @@ const {
     clearScreenStream
 } = require('../modules/p2p-screen')
 
+const { drawing, setPenColor, setPenThickness, erasing, setEraserSize } = require('../modules/canvas')
+
 const {
     LOGIN_SUCCESS,
     LOGIN_FAILURE,
@@ -32,7 +34,12 @@ const {
     SHARE_FAILURE,
     SCREEN_RECEIVE,
     SCREEN_STOP_SUCCESS,
-    SCREEN_STOP_FAILURE
+    SCREEN_STOP_FAILURE,
+    FILE_SHARE_FAILURE,
+    FILE_SHARE_SUCCESS,
+    FILE_SHARE_RECEIVE,
+    DRAWING,
+    ERASERING
 } = require('../constants/actions')
 
 const { endpoint, option } = require('../constants/socket')
@@ -155,7 +162,7 @@ module.exports = () => {
                         room: ''
                     })
 
-                    return ktalk.sendMessage({
+                    return Ktalk.sendMessage({
                         eventOp: 'ExitRoom',
                         roomId: user.room,
                         reqDate: createRequestDate(),
@@ -190,7 +197,7 @@ module.exports = () => {
                 const { user } = getState()
 
                 if (usage === 'cam' && sdp && sdp.type === 'offer') {
-                    ktalk.sendMessage({
+                    Ktalk.sendMessage({
                         eventOp: 'SDP',
                         reqDate: createRequestDate(),
                         reqNo: createRequestNo(),
@@ -287,7 +294,7 @@ module.exports = () => {
                         const offer = await createP2pScreenOffer()
 
                         // send offer
-                        return ktalk.sendMessage({
+                        return Ktalk.sendMessage({
                             eventOp: 'SDP',
                             reqDate: createRequestDate(),
                             reqNo: createRequestNo(),
@@ -343,7 +350,61 @@ module.exports = () => {
                         }
                     })
                 }
+            }
+            case 'FileShareStart': {
+                if (code === '200') {
+                    return dispatch({
+                        type: FILE_SHARE_SUCCESS
+                    })
+                }
+                if (code === '481') {
+                    // TODO: 인증되지 않은 사용자가 파일 업로드를 하면, 업로드 된 파일을 지워야 할텐데...
+                    return dispatch({
+                        type: FILE_SHARE_FAILURE,
+                        payload: {
+                            message: 'unrecognized user'
+                        }
+                    })
+                }
+
                 return
+            }
+
+            case 'FileShareStartSvr': {
+                return dispatch({
+                    type: FILE_SHARE_RECEIVE,
+                    payload: {
+                        sender: data.urserId,
+                        files: data.fileInfoList
+                    }
+                })
+
+                return
+            }
+
+            case 'Draw': {
+                const { axisX, axisY, status } = data
+                return drawing({ x: axisX, y: axisY, status })
+            }
+
+            case 'Erase': {
+                const { axisX, axisY, status } = data
+                return erasing({ x: axisX, y: axisY, status })
+            }
+
+            case 'EraserSize': {
+                const { eraserSize } = data
+                return setEraserSize(eraserSize, true)
+            }
+
+            case 'Color': {
+                const { color } = data
+                return setPenColor(color, true)
+            }
+
+            case 'LineSize': {
+                const { lineSize } = data
+                return setPenThickness(lineSize, true)
             }
         }
 
@@ -354,7 +415,7 @@ module.exports = () => {
         //         }
         //     }
         // })
-        // window.ktalk.listener.dispatchEvent(event)
+        // window.Ktalk.listener.dispatchEvent(event)
     })
 
     return socket

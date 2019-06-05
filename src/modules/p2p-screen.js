@@ -29,7 +29,7 @@ const setScreenPeerConnection = stream => {
 
             peer.onicecandidate = e => {
                 if (e.candidate) {
-                    ktalk.sendMessage({
+                    Ktalk.sendMessage({
                         eventOp: 'Candidate',
                         reqDate: createRequestDate(),
                         reqNo: createRequestNo(),
@@ -135,7 +135,7 @@ const acceptScreenShare = async ({ screen }) => {
 
         const { user } = getState()
 
-        return ktalk.sendMessage({
+        return Ktalk.sendMessage({
             eventOp: 'SDP',
             reqDate: createRequestDate(),
             reqNo: createRequestNo(),
@@ -168,7 +168,7 @@ const startScreenShare = ({ screen }) => {
         type: SCREEN_REQUEST
     })
 
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'SessionReserve',
         reqNo: createRequestNo(),
         reqDate: createRequestDate(),
@@ -214,7 +214,7 @@ const stopScreenShare = () => {
         type: SCREEN_STOP_REQUEST
     })
 
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'SessionReserveEnd',
         reqNo: createRequestNo(),
         reqDate: createRequestDate(),
@@ -222,7 +222,7 @@ const stopScreenShare = () => {
         roomId: user.room
     })
 
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'ScreenShareConferenceEnd',
         reqNo: createRequestNo(),
         reqDate: createRequestDate(),

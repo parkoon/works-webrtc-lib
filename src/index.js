@@ -9,38 +9,58 @@ const { login, logout } = require('./modules/auth')
 const { createRequestDate, createRequestNo } = require('./helpers/request')
 
 const { createInput, fileShareHandler } = require('./modules/file')
+const {
+    createCanvas,
+    drawing,
+    blockDrawing,
+    releaseDrawing,
+    setPenColor,
+    setPenThickness,
+    setWhiteboardTool,
+    setEraserSize
+} = require('./modules/canvas')
 
 /** main */
-window.ktalk = {}
+Ktalk = {}
 
 /** user & peer state */
-window.ktalk.getState = getState
+Ktalk.getState = getState
 
 /** request data */
-window.ktalk.createRequestDate = createRequestDate
-window.ktalk.createRequestNo = createRequestNo
+Ktalk.createRequestDate = createRequestDate
+Ktalk.createRequestNo = createRequestNo
 
 /** password encryption */
-window.ktalk.encryption = encryption
+Ktalk.encryption = encryption
 
 /** socket */
-window.ktalk.sendMessage = socket.sendMessage
-window.ktalk.listener = document.createElement('div')
+Ktalk.sendMessage = socket.sendMessage
+Ktalk.listener = document.createElement('div')
 
 /** p2p video connection */
-window.ktalk.startVideoCall = startVideoCall
-window.ktalk.stopVideoCall = stopVideoCall
-window.ktalk.acceptVideoCall = acceptVideoCall
+Ktalk.startVideoCall = startVideoCall
+Ktalk.stopVideoCall = stopVideoCall
+Ktalk.acceptVideoCall = acceptVideoCall
 
 /** p2p screen share */
-window.ktalk.startScreenShare = startScreenShare
-window.ktalk.stopScreenShare = stopScreenShare
-window.ktalk.acceptScreenShare = acceptScreenShare
+Ktalk.startScreenShare = startScreenShare
+Ktalk.stopScreenShare = stopScreenShare
+Ktalk.acceptScreenShare = acceptScreenShare
 
 /** auth */
-window.ktalk.login = login
-window.ktalk.logout = logout
+window.Ktalk.login = login
+window.Ktalk.logout = logout
 
 /** file share */
-window.ktalk.input = createInput()
-window.ktalk.fileShareHandler = fileShareHandler
+Ktalk.uploader = createInput()
+Ktalk.fileShareHandler = fileShareHandler
+
+/** realtime canvas */
+Ktalk.whiteboard = (w, h) => createCanvas(w, h)
+Ktalk.drawing = (x, y) => drawing(x, y)
+Ktalk.blockDrawing = blockDrawing
+Ktalk.releaseDrawing = releaseDrawing
+Ktalk.setPenColor = setPenColor
+Ktalk.setPenThickness = setPenThickness
+Ktalk.setWhiteboardTool = setWhiteboardTool
+Ktalk.setEraserSize = setEraserSize

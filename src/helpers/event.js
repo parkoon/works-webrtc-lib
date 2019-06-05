@@ -6,7 +6,7 @@ const dispatch = action => {
             payload: action.payload || ''
         }
     })
-    window.ktalk.listener.dispatchEvent(event)
+    window.Ktalk.listener.dispatchEvent(event)
 }
 
 module.exports = dispatch

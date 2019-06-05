@@ -2,7 +2,10 @@ const axios = require('axios')
 
 const { UPLOAD_API } = require('../constants/file')
 const dispatch = require('../helpers/event')
+const { getState } = require('../store')
+const { createRequestDate, createRequestNo } = require('../helpers/request')
 const pdfjs = require('../helpers/pdf')
+
 const {
     FILE_SHARE_REQUEST,
     FILE_SHARE_SUCCESS,
@@ -108,12 +111,34 @@ const handleChange = async ({ target }) => {
         dispatch({
             type: FILE_UPLOAD_SUCCESS,
             payload: {
-                results: data
+                files: data
             }
+        })
+
+        dispatch({
+            type: FILE_SHARE_REQUEST
+        })
+
+        const { user } = getState()
+
+        Ktalk.sendMessage({
+            eventOp: 'FileShareStart',
+            userId: user.id,
+            reqDate: createRequestDate(),
+            reqNo: createRequestNo(),
+            fileInfoList: [...data],
+            roomId: user.room
         })
     } catch (err) {
         dispatch({
             type: FILE_UPLOAD_FAILURE,
+            payload: {
+                message: 'file server error'
+            }
+        })
+
+        dispatch({
+            type: FILE_SHARE_FAILURE,
             payload: {
                 message: 'file server error'
             }

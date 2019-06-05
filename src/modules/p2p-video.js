@@ -80,7 +80,7 @@ const startVideoCall = async option => {
         //     call: true
         // })
 
-        ktalk.sendMessage({
+        Ktalk.sendMessage({
             eventOp: 'Call',
             userId: 't1',
             targetId: ['t2'],
@@ -122,7 +122,7 @@ const initVideoPeer = (localVideo, remoteVideo) => {
 
             peer.onicecandidate = e => {
                 if (e.candidate) {
-                    ktalk.sendMessage({
+                    Ktalk.sendMessage({
                         eventOp: 'Candidate',
                         reqDate: createRequestDate(),
                         reqNo: createRequestNo(),
@@ -202,13 +202,13 @@ const acceptVideoCall = async ({ localVideo, remoteVideo }) => {
     })
 
     const { user } = getState()
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'Invite',
         status: 'accept',
         roomId: user.room
     })
 
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'Join',
         status: 'accept',
         roomId: user.room,
@@ -235,7 +235,7 @@ const acceptVideoCall = async ({ localVideo, remoteVideo }) => {
             localStream: stream
         })
 
-        ktalk.sendMessage({
+        Ktalk.sendMessage({
             eventOp: 'SDP',
             reqDate: createRequestDate(),
             reqNo: createRequestNo(),
@@ -253,13 +253,13 @@ const rejectVideoCall = () => {
         type: CALL_REJECT
     })
 
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'Invite',
         status: 'reject',
         roomId: getState().user.room
     })
 
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'Join',
         status: 'reject',
         roomId: getState().user.room,
@@ -277,7 +277,7 @@ const stopVideoCall = () => {
     dispatch({
         type: CALL_STOP_REQUEST
     })
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'ExitRoom',
         roomId: user.room,
         reqDate: createRequestDate(),

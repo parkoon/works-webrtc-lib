@@ -3,12 +3,12 @@ const dispatch = require('../helpers/event')
 const { LOGOUT_FAILURE } = require('../constants/actions')
 
 const login = ({ id, password }) => {
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'Login',
         userId: id,
-        userPw: ktalk.encryption(password),
-        reqDate: ktalk.createRequestDate(),
-        reqNo: ktalk.createRequestNo(),
+        userPw: Ktalk.encryption(password),
+        reqDate: Ktalk.createRequestDate(),
+        reqNo: Ktalk.createRequestNo(),
         deviceType: 'pc'
     })
 }
@@ -23,11 +23,11 @@ const logout = () => {
         })
     }
     console.log('user.id', user.id)
-    ktalk.sendMessage({
+    Ktalk.sendMessage({
         eventOp: 'Logout',
         userId: user.id,
-        reqDate: ktalk.createRequestDate(),
-        reqNo: ktalk.createRequestNo()
+        reqDate: Ktalk.createRequestDate(),
+        reqNo: Ktalk.createRequestNo()
     })
 }
 
