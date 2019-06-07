@@ -13,11 +13,7 @@ let __kp__thickness = 7
 let __kp__eraser__size = 7
 let __kp__tool = 'pen'
 
-const initCanvasContext = () => {
-    __kp__context = __kp__canvas.getContext('2d')
-    __kp__context.lineJoin = 'round'
-    __kp__context.lineCap = 'round'
-}
+const initCanvasContext = () => {}
 
 const useErase = () => {}
 
@@ -119,7 +115,6 @@ export const erasing = option => {
 
 export const setEraserSize = (size, receiver) => {
     __kp__eraser__size = size
-    alert(__kp__eraser__size)
     dispatch({
         type: CHANGE_ERASER_SIZE,
         payload: {
@@ -253,7 +248,6 @@ export const handleMouseMove = ({ clientX, clientY }) => {
 }
 
 export const blockDrawing = () => {
-    alert('블로킹')
     __kp__canvas.removeEventListener('mousedown', handleMouseDown)
     __kp__canvas.removeEventListener('mousemove', handleMouseMove)
     __kp__canvas.removeEventListener('mouseup', handleMouseUp)
@@ -277,17 +271,23 @@ export const createCanvas = (w, h) => {
     `
 
     __kp__canvas = canvas
-    canvas.style.background = 'transparent'
-    canvas.style.border = '1px solid #dbdbdb'
+
+    canvas.style.cssText = `
+        background: transparent;
+        border: 1px solid #dbdbdb
+    `
+
     canvas.width = w || 1280
     canvas.height = h || 720
 
-    initCanvasContext()
+    __kp__context = canvas.getContext('2d')
+    __kp__context.lineJoin = 'round'
+    __kp__context.lineCap = 'round'
 
-    __kp__canvas.addEventListener('mousedown', handleMouseDown)
-    __kp__canvas.addEventListener('mousemove', handleMouseMove)
-    __kp__canvas.addEventListener('mouseup', handleMouseUp)
-    __kp__canvas.addEventListener('mouseout', handleMouseUp)
+    canvas.addEventListener('mousedown', handleMouseDown)
+    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('mouseup', handleMouseUp)
+    canvas.addEventListener('mouseout', handleMouseUp)
 
     div.appendChild(canvas)
 

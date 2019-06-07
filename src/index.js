@@ -1,7 +1,7 @@
 const socket = require('./modules/socket')()
 const { state, getState, setUser, setP2pVideoPeer } = require('./store')
 const encryption = require('./helpers/encryption')
-const { startVideoCall, stopVideoCall, acceptVideoCall } = require('./modules/p2p-video')
+const { startVideoCall, stopVideoCall, acceptVideoCall, rejectVideoCall } = require('./modules/p2p-video')
 
 const { startScreenShare, stopScreenShare, acceptScreenShare } = require('./modules/p2p-screen')
 
@@ -20,48 +20,53 @@ const {
     setEraserSize
 } = require('./modules/canvas')
 
+const { get } = require('./modules/contacts')
+
 /** main */
 Ktalk = {}
 
 /** user & peer state */
 Ktalk.getState = getState
 
-/** request data */
-Ktalk.createRequestDate = createRequestDate
-Ktalk.createRequestNo = createRequestNo
-
-/** password encryption */
-Ktalk.encryption = encryption
-
 /** socket */
 Ktalk.sendMessage = socket.sendMessage
-Ktalk.listener = document.createElement('div')
+Ktalk.IO = document.createElement('div')
 
 /** p2p video connection */
-Ktalk.startVideoCall = startVideoCall
-Ktalk.stopVideoCall = stopVideoCall
-Ktalk.acceptVideoCall = acceptVideoCall
+Ktalk.VideoCall = {}
+Ktalk.VideoCall.start = startVideoCall
+Ktalk.VideoCall.stop = stopVideoCall
+Ktalk.VideoCall.accept = acceptVideoCall
+Ktalk.VideoCall.reject = rejectVideoCall
 
 /** p2p screen share */
-Ktalk.startScreenShare = startScreenShare
-Ktalk.stopScreenShare = stopScreenShare
-Ktalk.acceptScreenShare = acceptScreenShare
+Ktalk.ScreenShare = {}
+Ktalk.ScreenShare.start = startScreenShare
+Ktalk.ScreenShare.stop = stopScreenShare
+Ktalk.ScreenShare.accept = acceptScreenShare
 
 /** auth */
-window.Ktalk.login = login
-window.Ktalk.logout = logout
+Ktalk.Auth = {}
+Ktalk.Auth.login = login
+Ktalk.Auth.logout = logout
 
 /** file share */
-Ktalk.uploader = createInput()
-Ktalk.sendFile = fileShareHandler
+Ktalk.File = {}
+Ktalk.File.uploader = createInput
+Ktalk.File.share = fileShareHandler
 
 /** realtime canvas */
-Ktalk.createWhiteboard = (w, h) => createCanvas(w, h)
-Ktalk.drawing = (x, y) => drawing(x, y)
-Ktalk.blockDrawing = blockDrawing
-Ktalk.releaseDrawing = releaseDrawing
-Ktalk.setPenColor = setPenColor
-Ktalk.setPenThickness = setPenThickness
-Ktalk.setWhiteboardTool = setWhiteboardTool
-Ktalk.setEraserSize = setEraserSize
-Ktalk.imageMapping = imageMapping
+Ktalk.Whiteboard = {}
+Ktalk.Whiteboard.create = (w, h) => createCanvas(w, h)
+Ktalk.Whiteboard.drawing = (x, y) => drawing(x, y)
+Ktalk.Whiteboard.block = blockDrawing
+Ktalk.Whiteboard.release = releaseDrawing
+Ktalk.Whiteboard.setPenColor = setPenColor
+Ktalk.Whiteboard.setPenThickness = setPenThickness
+Ktalk.Whiteboard.setTool = setWhiteboardTool
+Ktalk.Whiteboard.setEraserSize = setEraserSize
+Ktalk.Whiteboard.imageMapping = imageMapping
+
+/** contacts */
+Ktalk.Contacts = {}
+Ktalk.Contacts.get = get

@@ -74,7 +74,7 @@ module.exports = () => {
             case 'Login': {
                 if (code === '200') {
                     const user = {
-                        id: data.userId,
+                        // id: data.userId,
                         name: data.userName
                     }
                     setUser(user)

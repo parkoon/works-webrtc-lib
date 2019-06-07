@@ -45,7 +45,7 @@
             <div id="file-list"></div>
         </div>
 
-        <div id="whiteboard">
+        <div id="Whiteboard">
             <h1>화이트보드</h1>
             <div id="pen" class="button">펜</div>
             <div id="easer" class="button">지우개</div>
@@ -58,52 +58,54 @@
             // const User = new Ktalk.User({ type: 'caller' })
             // Ktalk initialize
 
-            const whiteboard = Ktalk.createWhiteboard()
+            // console.log(Ktalk.Contacts.get())
+
+            const Whiteboard = Ktalk.Whiteboard.create()
 
             document.querySelector('#color').onclick = () => {
-                Ktalk.setPenColor('red')
+                Ktalk.Whiteboard.setPenColor('red')
             }
             document.querySelector('#line').onclick = () => {
-                Ktalk.setPenThickness(50)
+                Ktalk.Whiteboard.setPenThickness(50)
             }
 
             document.querySelector('#pen').onclick = () => {
-                Ktalk.setWhiteboardTool('pen')
+                Ktalk.Whiteboard.setTool('pen')
             }
             document.querySelector('#easer').onclick = () => {
-                Ktalk.setWhiteboardTool('eraser')
+                Ktalk.Whiteboard.setTool('eraser')
             }
             document.querySelector('#size').onclick = () => {
-                Ktalk.setEraserSize(20)
+                Ktalk.Whiteboard.setEraserSize(20)
             }
 
             // setTimeout(() => {
             //     Ktalk.releaseDrawing()
             // }, 3000)
 
-            document.querySelector('#file-share-field').appendChild(Ktalk.uploader)
-            document.querySelector('#whiteboard').appendChild(whiteboard)
+            document.querySelector('#file-share-field').appendChild(Ktalk.File.uploader())
+            document.querySelector('#Whiteboard').appendChild(Whiteboard)
 
             // Ktalk.blockDrawing()
 
-            Ktalk.listener.addEventListener('ktalkevent', async e => {
+            Ktalk.IO.addEventListener('ktalkevent', async e => {
                 console.log(`%c ${JSON.stringify(e.detail)} `, 'background: #222; color: #bada55')
 
                 const { type } = e.detail
                 // 로그인 처리
 
                 if (type === 'SCREEN_RECEIVE') {
-                    Ktalk.acceptScreenShare({
+                    Ktalk.ScreenShare.accept({
                         screen: document.querySelector('#local-screen')
                     })
                 }
 
                 if (type === 'CALL_RECEIVE') {
-                    Ktalk.acceptVideoCall({
+                    Ktalk.VideoCall.accept({
                         localVideo: document.querySelector('#local'),
                         remoteVideo: document.querySelector('#remote')
                     })
-                    // Ktalk.rejectVideoCall()
+                    // Ktalk.VideoCall.reject()
                     // console.log('콜 받을래?')
                 }
 
@@ -121,15 +123,11 @@
 
                         // url, canvas
                         imgElement.addEventListener('click', () => {
-                            Ktalk.sendFile(file.url)
-                            Ktalk.imageMapping(file.url, whiteboard, {
-                                width: 1200,
-                                height: 800,
-                                emit: true
-                            }).then(canvas => {
-                                console.log('========= LOG START =======')
-                                console.log(canvas)
-                                console.log('========= LOG END =========')
+                            Ktalk.File.share(file.url)
+                            Ktalk.Whiteboard.imageMapping(file.url, Whiteboard, {
+                                width: 1280,
+                                height: 720,
+                                fit: true
                             })
                         })
                     })
@@ -137,10 +135,10 @@
 
                 if (type === 'FILE_SHARE_RECEIVE') {
                     const { url } = e.detail.payload
-                    Ktalk.imageMapping(url, whiteboard, {
-                        width: 1200,
-                        height: 800,
-                        emit: true
+                    Ktalk.Whiteboard.imageMapping(url, Whiteboard, {
+                        width: 1280,
+                        height: 720,
+                        fit: true
                     })
                     // files.forEach(file => {
                     //     const imgElement = document.createElement('img')
@@ -151,12 +149,12 @@
 
                 if (type === 'DRAWING') {
                     const { pos } = e.detail.payload
-                    Ktalk.drawing(pos.x, pos.y)
+                    Ktalk.Whiteboard.drawing(pos.x, pos.y)
                 }
             })
 
             document.querySelector('#start-video').onclick = () => {
-                Ktalk.startVideoCall({
+                Ktalk.VideoCall.start({
                     target: document.querySelector('#target').value,
                     localVideo: document.querySelector('#local'),
                     remoteVideo: document.querySelector('#remote')
@@ -164,29 +162,29 @@
             }
 
             document.querySelector('#stop-video').onclick = () => {
-                Ktalk.stopVideoCall()
+                Ktalk.VideoCall.stop()
             }
 
             document.querySelector('#start-screen-share').onclick = () => {
-                Ktalk.startScreenShare({
+                Ktalk.ScreenShare.start({
                     screen: document.querySelector('#local-screen')
                 })
             }
             document.querySelector('#stop-screen-share').onclick = () => {
-                Ktalk.stopScreenShare()
+                Ktalk.ScreenShare.stop()
             }
 
             document.querySelector('#login-btn').onclick = () => {
                 const id = document.querySelector('#user-id').value
                 const password = document.querySelector('#user-password').value
 
-                Ktalk.login({
+                Ktalk.Auth.login({
                     id,
                     password
                 })
             }
             document.querySelector('#logout-btn').onclick = () => {
-                Ktalk.logout()
+                Ktalk.Auth.logout()
             }
         </script>
     </body>

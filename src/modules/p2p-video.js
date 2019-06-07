@@ -80,6 +80,10 @@ const startVideoCall = async option => {
         //     call: true
         // })
 
+        console.log('========= LOG START =======')
+        console.log(getState())
+        console.log('========= LOG END =========')
+
         Ktalk.sendMessage({
             eventOp: 'Call',
             userId: getState().user.id,

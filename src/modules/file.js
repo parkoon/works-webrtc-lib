@@ -183,7 +183,7 @@ export const createInput = () => {
 export const imageMapping = (url, div, options) => {
     return new Promise(resolve => {
         const img = document.createElement('img')
-        const { width, height } = options
+        const { width = 1280, height = 720, fit = false } = options
         const canvas = document.createElement('canvas')
 
         canvas.style.cssText = `
@@ -192,6 +192,9 @@ export const imageMapping = (url, div, options) => {
             left: 0;
             z-index: -999;
         `
+        console.log('========= LOG START =======')
+        console.log(width, height)
+        console.log('========= LOG END =========')
 
         img.src = url
         img.addEventListener('load', () => {
@@ -204,8 +207,15 @@ export const imageMapping = (url, div, options) => {
 
             canvas.width = calculatedW
             canvas.height = calculatedH
-            div.firstChild.width = calculatedW
-            div.firstChild.height = calculatedH
+
+            // 이미지 캔버스와 드로잉 캔버스의 크기를 맞춤
+            if (fit) {
+                div.firstChild.width = calculatedW
+                div.firstChild.height = calculatedH
+
+                div.firstChild.getContext('2d').lineCap = 'round'
+                div.firstChild.getContext('2d').lineJoin = 'round'
+            }
 
             context.drawImage(img, 0, 0, calculatedW, calculatedH)
 
