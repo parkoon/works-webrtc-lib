@@ -113,22 +113,40 @@
                     files.forEach(file => {
                         const imgElement = document.createElement('img')
                         imgElement.src = file.url
-                        imgElement.addEventListener(
-                            'click',
-                            Ktalk.fileShareHandler.bind(imgElement, file.url)
-                        )
+                        // imgElement.addEventListener(
+                        //     'click',
+                        //     Ktalk.fileShareHandler.bind(imgElement, file.url)
+                        // )
                         document.querySelector('#file-list').appendChild(imgElement)
+
+                        // url, canvas
+                        imgElement.addEventListener('click', () => {
+                            Ktalk.sendFile(file.url)
+                            Ktalk.mapping(file.url, whiteboard, {
+                                width: 1200,
+                                height: 800,
+                                emit: true
+                            }).then(canvas => {
+                                console.log('========= LOG START =======')
+                                console.log(canvas)
+                                console.log('========= LOG END =========')
+                            })
+                        })
                     })
                 }
 
                 if (type === 'FILE_SHARE_RECEIVE') {
-                    const { files } = e.detail.payload
-
-                    files.forEach(file => {
-                        const imgElement = document.createElement('img')
-                        imgElement.src = file.url
-                        document.querySelector('#file-list').appendChild(imgElement)
+                    const { url } = e.detail.payload
+                    Ktalk.mapping(url, whiteboard, {
+                        width: 1200,
+                        height: 800,
+                        emit: true
                     })
+                    // files.forEach(file => {
+                    //     const imgElement = document.createElement('img')
+                    //     imgElement.src = file.url
+                    //     document.querySelector('#file-list').appendChild(imgElement)
+                    // })
                 }
 
                 if (type === 'DRAWING') {

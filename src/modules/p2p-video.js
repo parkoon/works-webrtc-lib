@@ -82,8 +82,8 @@ const startVideoCall = async option => {
 
         Ktalk.sendMessage({
             eventOp: 'Call',
-            userId: 't1',
-            targetId: ['t2'],
+            userId: getState().user.id,
+            targetId: [target],
             reqDeviceType: 'pc',
             reqDate: createRequestDate(),
             reqNo: createRequestNo()

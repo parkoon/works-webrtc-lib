@@ -8,7 +8,7 @@ const { startScreenShare, stopScreenShare, acceptScreenShare } = require('./modu
 const { login, logout } = require('./modules/auth')
 const { createRequestDate, createRequestNo } = require('./helpers/request')
 
-const { createInput, fileShareHandler } = require('./modules/file')
+const { createInput, fileShareHandler, mapping } = require('./modules/file')
 const {
     createCanvas,
     drawing,
@@ -53,7 +53,7 @@ window.Ktalk.logout = logout
 
 /** file share */
 Ktalk.uploader = createInput()
-Ktalk.fileShareHandler = fileShareHandler
+Ktalk.sendFile = fileShareHandler
 
 /** realtime canvas */
 Ktalk.whiteboard = (w, h) => createCanvas(w, h)
@@ -64,3 +64,4 @@ Ktalk.setPenColor = setPenColor
 Ktalk.setPenThickness = setPenThickness
 Ktalk.setWhiteboardTool = setWhiteboardTool
 Ktalk.setEraserSize = setEraserSize
+Ktalk.mapping = mapping

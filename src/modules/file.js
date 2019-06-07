@@ -1,3 +1,5 @@
+import { calculateAspectRatioFit } from '../helpers/canvas'
+
 const axios = require('axios')
 
 const { UPLOAD_API } = require('../constants/file')
@@ -146,11 +148,8 @@ const handleChange = async ({ target }) => {
     }
 }
 
-// this 를 사용하기 위해 function 키워드 사용
-export function fileShareHandler(url) {
-    const imgURL = (this && this.src) || url
-
-    if (!imgURL) {
+export const fileShareHandler = url => {
+    if (!url) {
         return dispatch({
             type: FILE_SHARE_FAILURE,
             payload: {
@@ -159,8 +158,14 @@ export function fileShareHandler(url) {
         })
     }
 
-    // 파일 공유!
-    console.log('this', this.src, url)
+    Ktalk.sendMessage({
+        eventOp: 'FileShare',
+        reqDate: createRequestDate(),
+        reqNo: createRequestNo(),
+        roomId: getState().user.room,
+        userId: getState().user.id,
+        fileUrl: url
+    })
 }
 
 export const createInput = () => {
@@ -173,4 +178,41 @@ export const createInput = () => {
     input.onchange = handleChange
 
     return input
+}
+
+export const mapping = (url, canvas2, options) => {
+    return new Promise(resolve => {
+        const img = document.createElement('img')
+        const { width, height } = options
+        const canvas = document.createElement('canvas')
+        canvas.width = 1200
+        canvas.height = 800
+
+        console.log('========= LOG START =======')
+        console.log(canvas.offsetLeft)
+        console.log('========= LOG END =========')
+
+        img.src = url
+        img.addEventListener('load', () => {
+            let ratio = calculateAspectRatioFit(
+                img.naturalWidth,
+                img.naturalHeight,
+                width,
+                height
+                // canvas.width,
+                // canvas.height
+            ) //
+
+            console.log('ratio', ratio)
+            let calculatedW = img.naturalWidth * ratio
+            let calculatedH = img.naturalHeight * ratio
+
+            const context = canvas.getContext('2d')
+            canvas.width = calculatedW
+            canvas.height = calculatedH
+            context.drawImage(img, 0, 0, calculatedW, calculatedH)
+
+            resolve(canvas)
+        })
+    })
 }

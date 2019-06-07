@@ -362,7 +362,7 @@ module.exports = () => {
                     return dispatch({
                         type: FILE_SHARE_FAILURE,
                         payload: {
-                            message: 'unrecognized user'
+                            message: 'Unrecognized user, login first'
                         }
                     })
                 }
@@ -370,17 +370,17 @@ module.exports = () => {
                 return
             }
 
-            case 'FileShareStartSvr': {
-                return dispatch({
-                    type: FILE_SHARE_RECEIVE,
-                    payload: {
-                        sender: data.urserId,
-                        files: data.fileInfoList
-                    }
-                })
+            // case 'FileShareStartSvr': {
+            //     return dispatch({
+            //         type: FILE_SHARE_RECEIVE,
+            //         payload: {
+            //             sender: data.urserId,
+            //             files: data.fileInfoList
+            //         }
+            //     })
 
-                return
-            }
+            //     return
+            // }
 
             case 'Draw': {
                 const { axisX, axisY, status } = data
@@ -405,6 +405,27 @@ module.exports = () => {
             case 'LineSize': {
                 const { lineSize } = data
                 return setPenThickness(lineSize, true)
+            }
+
+            case 'FileShare': {
+                if (code === '481') {
+                    return dispatch({
+                        type: FILE_SHARE_FAILURE,
+                        payload: {
+                            message: 'Unrecognized user, login first'
+                        }
+                    })
+                }
+            }
+
+            case 'FileShareSvr': {
+                return dispatch({
+                    type: FILE_SHARE_RECEIVE,
+                    payload: {
+                        sender: data.urserId,
+                        url: data.fileUrl
+                    }
+                })
             }
         }
 
