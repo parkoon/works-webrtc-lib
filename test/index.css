@@ -35,3 +35,19 @@
 hr {
     margin: 20px 0;
 }
+.video-container {
+    position: relative;
+}
+
+#ktalk-local-video {
+    position: absolute;
+    right: 10px;
+    bottom: 20px;
+    width: 40%;
+}
+#ktalk-remote-video {
+    width: 100%;
+}
+video {
+    border: 1px solid #dbdbdb;
+}

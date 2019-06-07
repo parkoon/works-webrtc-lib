@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <link rel="stylesheet" href="./index.css" />
+        <script src="../dist/Ktalk.min.js"></script>
+        <title>날리지톡 API 샘플 (화상통화)</title>
+    </head>
+    <body>
+        <input id="ktalk-auth-id" class="input" placeholder="id" />
+        <input id="ktalk-auth-password" class="input" placeholder="password" />
+        <button id="ktalk-auth-login" class="button">로그인</button>
+        <hr />
+        <input id="ktalk-video-target" class="input" placeholder="target id" />
+        <div class="video-container">
+            <video id="ktalk-local-video"></video>
+            <video id="ktalk-remote-video"></video>
+        </div>
+        <button id="ktalk-video-start" class="button">시작</button>
+        <button id="ktalk-video-stop" class="button">종료</button>
+    </body>
+
+    <script>
+        Ktalk.IO.addEventListener('ktalk', e => {
+            console.log(e.detail)
+
+            const { type } = e.detail
+
+            switch (type) {
+                case 'CALL_RECEIVE': {
+                    Ktalk.VideoCall.accept({
+                        video: {
+                            on: true,
+                            local: document.querySelector('#ktalk-local-video'),
+                            remote: document.querySelector('#ktalk-remote-video')
+                        },
+                        audio: {
+                            on: true
+                        }
+                    })
+                }
+            }
+        })
+
+        document.querySelector('#ktalk-auth-login').onclick = () => {
+            const id = document.querySelector('#ktalk-auth-id').value
+            const password = document.querySelector('#ktalk-auth-password').value
+
+            Ktalk.Auth.login({
+                id,
+                password
+            })
+        }
+
+        document.querySelector('#ktalk-video-start').onclick = () => {
+            Ktalk.VideoCall.start({
+                video: {
+                    on: true,
+                    local: document.querySelector('#ktalk-local-video'),
+                    remote: document.querySelector('#ktalk-remote-video')
+                },
+                audio: {
+                    on: true
+                },
+                target: document.querySelector('#ktalk-video-target').value
+            })
+        }
+        document.querySelector('#ktalk-video-stop').onclick = () => {}
+    </script>
+</html>

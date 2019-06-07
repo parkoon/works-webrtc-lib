@@ -20,23 +20,14 @@ const { configuration } = require('../constants/webrtc')
  * @param {Function} option.onicecnadidate // required
  */
 const startVideoCall = async option => {
-    const { localVideo, remoteVideo, target } = option
-    // const { loading } = getState()
-    // if (loading.call) {
-    //     return dispatch({
-    //         type: CALL_FAILURE,
-    //         payload: {
-    //             message: 'start call already'
-    //         }
-    //     })
-    // }
-
+    const { localVideo, remoteVideo, target, video, audio } = option
+    const { remote, local } = video
     // Parameter validation
-    if (!localVideo || !remoteVideo) {
+    if (!local || !remote) {
         return dispatch({
             type: CALL_FAILURE,
             payload: {
-                message: 'localVideo, remoteVideo(video element) parameter required'
+                message: 'local, remote(video element) parameter required'
             }
         })
     }
@@ -45,12 +36,13 @@ const startVideoCall = async option => {
         return dispatch({
             type: CALL_FAILURE,
             payload: {
-                message: 'target parameter require'
+                message: 'target parameter required'
             }
         })
     }
 
     setUser({ target })
+
     dispatch({
         type: CALL_REQUEST,
         payload: {
@@ -65,24 +57,24 @@ const startVideoCall = async option => {
          * 3. set stream to peer
          * 4. send call(eventOP) message
          */
-        const peer = await initVideoPeer(localVideo, remoteVideo)
-        const stream = await createVideoStream()
+        const peer = await initVideoPeer(local, remote)
+        const stream = await createVideoStream({ video: video.on, audio: audio.on })
         peer.addStream(stream)
-        localVideo.srcObject = stream
-        // await setUserMedia(localVideo, remoteVideo)
+
+        console.log('========= LOG START =======')
+        console.log(stream, local)
+        console.log('========= LOG END =========')
+
+        local.srcObject = stream
+
+        local.onloadedmetadata = () => {
+            local.play()
+        }
 
         setP2pVideoPeer({
             instance: peer,
             localStream: stream
         })
-
-        // setLoading({
-        //     call: true
-        // })
-
-        console.log('========= LOG START =======')
-        console.log(getState())
-        console.log('========= LOG END =========')
 
         Ktalk.sendMessage({
             eventOp: 'Call',
@@ -97,10 +89,10 @@ const startVideoCall = async option => {
     }
 }
 
-const createVideoStream = () => {
+const createVideoStream = options => {
     return new Promise(async (resolve, reject) => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            const stream = await navigator.mediaDevices.getUserMedia(options)
             resolve(stream)
         } catch (err) {
             reject(err)
@@ -108,13 +100,18 @@ const createVideoStream = () => {
     })
 }
 
-const initVideoPeer = (localVideo, remoteVideo) => {
+const initVideoPeer = (local, remote) => {
     return new Promise((resolve, reject) => {
         try {
             const peer = new RTCPeerConnection(configuration)
 
             peer.onaddstream = ({ stream }) => {
-                remoteVideo.srcObject = stream
+                remote.srcObject = stream
+
+                remote.onloadedmetadata = () => {
+                    remote.play()
+                }
+
                 setP2pVideoPeer({
                     remoteStream: stream
                 })
@@ -190,13 +187,15 @@ const setP2pVideoCandidate = candidate => {
     }
 }
 
-const acceptVideoCall = async ({ localVideo, remoteVideo }) => {
+const acceptVideoCall = async options => {
+    const { video, audio } = options
+    const { local, remote } = video
     // Parameter validation
-    if (!localVideo || !remoteVideo) {
+    if (!local || !remote) {
         return dispatch({
             type: CALL_FAILURE,
             payload: {
-                message: 'localVideo, remoteVideo(video element) parameter required'
+                message: 'local, remote(video element) parameter required'
             }
         })
     }
@@ -228,11 +227,14 @@ const acceptVideoCall = async ({ localVideo, remoteVideo }) => {
          * 3. set stream to peer
          * 4. create and send offer
          */
-        const peer = await initVideoPeer(localVideo, remoteVideo)
-        const stream = await createVideoStream()
+        const peer = await initVideoPeer(local, remote)
+        const stream = await createVideoStream({ video: video.on, audio: audio.on })
         peer.addStream(stream)
-        localVideo.srcObject = stream
-        // await setUserMedia(localVideo, remoteVideo)
+        local.srcObject = stream
+
+        local.onloadedmetadata = () => {
+            local.play()
+        }
 
         setP2pVideoPeer({
             instance: peer,

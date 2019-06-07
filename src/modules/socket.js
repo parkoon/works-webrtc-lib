@@ -153,6 +153,9 @@ module.exports = () => {
                     })
                 }
 
+                if (code === '481') {
+                }
+
                 // target을 찾을 수 없음
                 if (code === '561') {
                     /**
