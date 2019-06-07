@@ -1,16 +1,26 @@
 const { getState, setUser } = require('../store')
 const dispatch = require('../helpers/event')
-const { LOGOUT_FAILURE, SIGNUP_FAILURE, SIGNUP_REQUEST, SIGNUP_SUCCESS } = require('../constants/actions')
+const { LOGOUT_FAILURE, SIGNUP_FAILURE, SIGNUP_REQUEST, LOGIN_REQUEST } = require('../constants/actions')
 const { createRequestDate, createRequestNo } = require('../helpers/request')
+const encryption = require('../helpers/encryption')
 
 const login = ({ id, password }) => {
+    dispatch({
+        type: LOGIN_REQUEST,
+        payload: {
+            id,
+            password
+        }
+    })
+
     setUser({
         id
     })
+
     Ktalk.sendMessage({
         eventOp: 'Login',
         userId: id,
-        userPw: Ktalk.encryption(password),
+        userPw: encryption(password),
         reqDate: createRequestDate(),
         reqNo: createRequestNo(),
         deviceType: 'pc'

@@ -90,8 +90,10 @@ module.exports = () => {
                 if (code === '200') {
                     const user = {
                         // id: data.userId,
+                        id: getState().user.id,
                         name: data.userName
                     }
+
                     setUser(user)
 
                     return dispatch({
@@ -101,6 +103,12 @@ module.exports = () => {
                         }
                     })
                 } else {
+                    setUser({
+                        id: '',
+                        name: '',
+                        room: '',
+                        target: ''
+                    })
                     return dispatch({
                         type: LOGIN_FAILURE,
                         payload: {

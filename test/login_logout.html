@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <link rel="stylesheet" href="./index.css" />
+        <script src="../dist/Ktalk.min.js"></script>
+        <title>날리지톡 API 샘플 (로그인/로그아웃)</title>
+    </head>
+    <body>
+        <input id="ktalk-auth-id" class="input" placeholder="id" />
+        <input id="ktalk-auth-password" class="input" placeholder="password" />
+        <button id="ktalk-auth-login" class="button">로그인</button>
+        <button id="ktalk-auth-logout" class="button">로그아웃</button>
+    </body>
+
+    <script>
+        Ktalk.IO.addEventListener('ktalk', e => {
+            console.log(e.detail)
+        })
+
+        document.querySelector('#ktalk-auth-login').onclick = () => {
+            const id = document.querySelector('#ktalk-auth-id').value
+            const password = document.querySelector('#ktalk-auth-password').value
+
+            Ktalk.Auth.login({
+                id,
+                password
+            })
+        }
+    </script>
+</html>
