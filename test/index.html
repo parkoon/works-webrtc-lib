@@ -58,7 +58,7 @@
             // const User = new Ktalk.User({ type: 'caller' })
             // Ktalk initialize
 
-            const whiteboard = Ktalk.whiteboard()
+            const whiteboard = Ktalk.createWhiteboard()
 
             document.querySelector('#color').onclick = () => {
                 Ktalk.setPenColor('red')
@@ -122,7 +122,7 @@
                         // url, canvas
                         imgElement.addEventListener('click', () => {
                             Ktalk.sendFile(file.url)
-                            Ktalk.mapping(file.url, whiteboard, {
+                            Ktalk.imageMapping(file.url, whiteboard, {
                                 width: 1200,
                                 height: 800,
                                 emit: true
@@ -137,7 +137,7 @@
 
                 if (type === 'FILE_SHARE_RECEIVE') {
                     const { url } = e.detail.payload
-                    Ktalk.mapping(url, whiteboard, {
+                    Ktalk.imageMapping(url, whiteboard, {
                         width: 1200,
                         height: 800,
                         emit: true

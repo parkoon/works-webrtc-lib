@@ -269,10 +269,18 @@ export const releaseDrawing = () => {
 
 export const createCanvas = (w, h) => {
     const canvas = document.createElement('canvas')
+    const div = document.createElement('div')
+
+    div.setAttribute('class', 'ktalk-whiteboard')
+    div.style.cssText = `
+        position: relative;
+    `
+
     __kp__canvas = canvas
-    canvas.style.backgroundColor = 'gray'
-    canvas.width = w || 500
-    canvas.height = h || 500
+    canvas.style.background = 'transparent'
+    canvas.style.border = '1px solid #dbdbdb'
+    canvas.width = w || 1280
+    canvas.height = h || 720
 
     initCanvasContext()
 
@@ -281,5 +289,7 @@ export const createCanvas = (w, h) => {
     __kp__canvas.addEventListener('mouseup', handleMouseUp)
     __kp__canvas.addEventListener('mouseout', handleMouseUp)
 
-    return canvas
+    div.appendChild(canvas)
+
+    return div
 }

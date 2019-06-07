@@ -180,37 +180,36 @@ export const createInput = () => {
     return input
 }
 
-export const mapping = (url, canvas2, options) => {
+export const imageMapping = (url, div, options) => {
     return new Promise(resolve => {
         const img = document.createElement('img')
         const { width, height } = options
         const canvas = document.createElement('canvas')
-        canvas.width = 1200
-        canvas.height = 800
 
-        console.log('========= LOG START =======')
-        console.log(canvas.offsetLeft)
-        console.log('========= LOG END =========')
+        canvas.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -999;
+        `
 
         img.src = url
         img.addEventListener('load', () => {
-            let ratio = calculateAspectRatioFit(
-                img.naturalWidth,
-                img.naturalHeight,
-                width,
-                height
-                // canvas.width,
-                // canvas.height
-            ) //
+            let ratio = calculateAspectRatioFit(img.naturalWidth, img.naturalHeight, width, height)
 
-            console.log('ratio', ratio)
             let calculatedW = img.naturalWidth * ratio
             let calculatedH = img.naturalHeight * ratio
 
             const context = canvas.getContext('2d')
+
             canvas.width = calculatedW
             canvas.height = calculatedH
+            div.firstChild.width = calculatedW
+            div.firstChild.height = calculatedH
+
             context.drawImage(img, 0, 0, calculatedW, calculatedH)
+
+            div.appendChild(canvas)
 
             resolve(canvas)
         })
