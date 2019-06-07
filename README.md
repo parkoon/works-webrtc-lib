@@ -1,6 +1,6 @@
 ## Handler
 
-Ktalk.listener.addEventListener('ktalkevent', 핸들러)
+Ktalk.listener.addEventListener('ktalk', 핸들러)
 
 1. CALL_RECEIVE
 
@@ -29,7 +29,7 @@ remoteVideo // 상대방 영상 화면
 }
 
 // callee
-ktalkevent 이벤트에서
+ktalk 이벤트에서
 CALL_RECEIVE
 Ktalk.acceptVideoCall(options)
 {

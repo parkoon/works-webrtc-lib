@@ -5,7 +5,7 @@ const { startVideoCall, stopVideoCall, acceptVideoCall, rejectVideoCall } = requ
 
 const { startScreenShare, stopScreenShare, acceptScreenShare } = require('./modules/p2p-screen')
 
-const { login, logout } = require('./modules/auth')
+const { login, logout, signup } = require('./modules/auth')
 const { createRequestDate, createRequestNo } = require('./helpers/request')
 
 const { createInput, fileShareHandler, imageMapping } = require('./modules/file')
@@ -49,6 +49,7 @@ Ktalk.ScreenShare.accept = acceptScreenShare
 Ktalk.Auth = {}
 Ktalk.Auth.login = login
 Ktalk.Auth.logout = logout
+Ktalk.Auth.signup = signup
 
 /** file share */
 Ktalk.File = {}

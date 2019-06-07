@@ -22,6 +22,8 @@ const {
 const { drawing, setPenColor, setPenThickness, erasing, setEraserSize } = require('../modules/canvas')
 
 const {
+    SIGNUP_FAILURE,
+    SIGNUP_SUCCESS,
     LOGIN_SUCCESS,
     LOGIN_FAILURE,
     CALL_FAILURE,
@@ -67,6 +69,19 @@ module.exports = () => {
         console.log('[RECEIVE]', data)
         const { eventOp, signalOp, code, message } = data
         switch (eventOp || signalOp) {
+            case 'SignUp': {
+                if (code === '409') {
+                    return dispatch({
+                        type: SIGNUP_FAILURE,
+                        payload: {
+                            message
+                        }
+                    })
+                }
+                return dispatch({
+                    type: SIGNUP_SUCCESS
+                })
+            }
             /**
              * 로그인 처리
              * 성공 / 실패
@@ -429,7 +444,7 @@ module.exports = () => {
             }
         }
 
-        // const event = new CustomEvent('ktalkevent', {
+        // const event = new CustomEvent('ktalk', {
         //     detail: {
         //         data: {
         //             ...data
