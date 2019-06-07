@@ -41,7 +41,9 @@ const {
     FILE_SHARE_SUCCESS,
     FILE_SHARE_RECEIVE,
     DRAWING,
-    ERASERING
+    ERASERING,
+    LOGOUT_SUCCESS,
+    LOGOUT_FAILURE
 } = require('../constants/actions')
 
 const { endpoint, option } = require('../constants/socket')
@@ -116,6 +118,28 @@ module.exports = () => {
                         }
                     })
                 }
+            }
+
+            case 'Logout': {
+                if (code === '200') {
+                    setUser({
+                        id: '',
+                        name: '',
+                        room: '',
+                        target: ''
+                    })
+
+                    return dispatch({
+                        type: LOGOUT_SUCCESS
+                    })
+                }
+
+                return dispatch({
+                    type: LOGOUT_FAILURE,
+                    payload: {
+                        message
+                    }
+                })
             }
 
             /**

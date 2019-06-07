@@ -1,6 +1,12 @@
 const { getState, setUser } = require('../store')
 const dispatch = require('../helpers/event')
-const { LOGOUT_FAILURE, SIGNUP_FAILURE, SIGNUP_REQUEST, LOGIN_REQUEST } = require('../constants/actions')
+const {
+    LOGOUT_FAILURE,
+    SIGNUP_FAILURE,
+    SIGNUP_REQUEST,
+    LOGIN_REQUEST,
+    LOGOUT_REQUEST
+} = require('../constants/actions')
 const { createRequestDate, createRequestNo } = require('../helpers/request')
 const encryption = require('../helpers/encryption')
 
@@ -30,6 +36,10 @@ const login = ({ id, password }) => {
 const logout = () => {
     const { user } = getState()
 
+    dispatch({
+        type: LOGOUT_REQUEST
+    })
+
     if (!user.id) {
         return dispatch({
             type: LOGOUT_FAILURE,
@@ -44,6 +54,8 @@ const logout = () => {
         reqNo: createRequestNo()
     })
 }
+
+const isLoggedIn = () => (getState().user.id ? true : false)
 
 const signup = user => {
     const { id, password, name } = user
@@ -74,5 +86,6 @@ const signup = user => {
 module.exports = {
     login,
     logout,
-    signup
+    signup,
+    isLoggedIn
 }
