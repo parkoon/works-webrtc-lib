@@ -308,6 +308,13 @@ const clearVideoStream = stream => {
     }
 }
 
+const toggleVideo = () => {
+    const { p2pVideoPeer } = getState()
+    p2pVideoPeer.instance.getVi
+}
+
+const toggleAudio = () => {}
+
 module.exports = {
     createP2pVideoOffer,
     createP2pVideoAnswer,

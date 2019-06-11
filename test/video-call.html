@@ -67,6 +67,8 @@
                 target: document.querySelector('#ktalk-video-target').value
             })
         }
-        document.querySelector('#ktalk-video-stop').onclick = () => {}
+        document.querySelector('#ktalk-video-stop').onclick = () => {
+            Ktalk.VideoCall.stop()
+        }
     </script>
 </html>
