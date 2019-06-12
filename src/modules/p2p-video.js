@@ -6,7 +6,13 @@ const {
     CALL_REQUEST,
     CALL_ACCEPT,
     CALL_REJECT,
-    CALL_STOP_REQUEST
+    CALL_STOP_REQUEST,
+    VIDEO_TOGGLE_REQUEST,
+    VIDEO_TOGGLE_SUCCESS,
+    VIDEO_TOGGLE_FAILURE,
+    AUDIO_TOGGLE_REQUEST,
+    AUDIO_TOGGLE_SUCCESS,
+    AUDIO_TOGGLE_FAILURE
 } = require('../constants/actions')
 const dispatch = require('../helpers/event')
 const { configuration } = require('../constants/webrtc')
@@ -19,7 +25,7 @@ const { configuration } = require('../constants/webrtc')
  * @param {String} option.type // required
  * @param {Function} option.onicecnadidate // required
  */
-const startVideoCall = async option => {
+export const startVideoCall = async option => {
     const { localVideo, remoteVideo, target, video, audio } = option
     const { remote, local } = video
     // Parameter validation
@@ -89,7 +95,7 @@ const startVideoCall = async option => {
     }
 }
 
-const createVideoStream = options => {
+export const createVideoStream = options => {
     return new Promise(async (resolve, reject) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia(options)
@@ -100,7 +106,7 @@ const createVideoStream = options => {
     })
 }
 
-const initVideoPeer = (local, remote) => {
+export const initVideoPeer = (local, remote) => {
     return new Promise((resolve, reject) => {
         try {
             const peer = new RTCPeerConnection(configuration)
@@ -142,7 +148,7 @@ const initVideoPeer = (local, remote) => {
 }
 
 // Create offer SDP
-const createP2pVideoOffer = () => {
+export const createP2pVideoOffer = () => {
     return new Promise(async (resolve, reject) => {
         const { p2pVideoPeer } = getState()
         try {
@@ -157,7 +163,7 @@ const createP2pVideoOffer = () => {
 }
 
 // Crate answer SDP
-const createP2pVideoAnswer = offer => {
+export const createP2pVideoAnswer = offer => {
     return new Promise(async (resolve, reject) => {
         const { p2pVideoPeer } = getState()
 
@@ -173,13 +179,13 @@ const createP2pVideoAnswer = offer => {
 }
 
 // Done
-const p2pVideoConnectDone = answer => {
+export const p2pVideoConnectDone = answer => {
     const { p2pVideoPeer } = getState()
     p2pVideoPeer.instance.setRemoteDescription(answer)
 }
 
 // Set candidate
-const setP2pVideoCandidate = candidate => {
+export const setP2pVideoCandidate = candidate => {
     const { p2pVideoPeer } = getState()
 
     if (candidate) {
@@ -187,7 +193,7 @@ const setP2pVideoCandidate = candidate => {
     }
 }
 
-const acceptVideoCall = async options => {
+export const acceptVideoCall = async options => {
     const { video, audio } = options
     const { local, remote } = video
     // Parameter validation
@@ -254,7 +260,7 @@ const acceptVideoCall = async options => {
         console.error(err)
     }
 }
-const rejectVideoCall = () => {
+export const rejectVideoCall = () => {
     dispatch({
         type: CALL_REJECT
     })
@@ -275,7 +281,7 @@ const rejectVideoCall = () => {
     })
 }
 
-const stopVideoCall = () => {
+export const stopVideoCall = () => {
     const { user, p2pVideoPeer } = getState()
     setUser({
         room: ''
@@ -296,7 +302,7 @@ const stopVideoCall = () => {
     clearVideoStream(p2pVideoPeer.remoteStream)
 }
 
-const clearVideoStream = stream => {
+export const clearVideoStream = stream => {
     if (!stream) return
     try {
         stream.getTracks().forEach(track => {
@@ -308,21 +314,66 @@ const clearVideoStream = stream => {
     }
 }
 
-const toggleVideo = () => {
+export const toggleVideo = (status = true) => {
     const { p2pVideoPeer } = getState()
-    p2pVideoPeer.instance.getVi
+
+    dispatch({
+        type: VIDEO_TOGGLE_REQUEST,
+        payload: {
+            status
+        }
+    })
+
+    if (!p2pVideoPeer.instance) {
+        return dispatch({
+            type: VIDEO_TOGGLE_FAILURE,
+            payload: {
+                message: 'video is not connected'
+            }
+        })
+    }
+
+    const track = p2pVideoPeer.localStream.getVideoTracks()[0]
+
+    track.enabled = status
+
+    return dispatch({
+        type: VIDEO_TOGGLE_SUCCESS,
+        payload: {
+            track,
+            status
+        }
+    })
 }
 
-const toggleAudio = () => {}
+export const toggleAudio = (status = true) => {
+    const { p2pVideoPeer } = getState()
 
-module.exports = {
-    createP2pVideoOffer,
-    createP2pVideoAnswer,
-    p2pVideoConnectDone,
-    setP2pVideoCandidate,
-    startVideoCall,
-    acceptVideoCall,
-    rejectVideoCall,
-    clearVideoStream,
-    stopVideoCall
+    dispatch({
+        type: AUDIO_TOGGLE_REQUEST,
+        payload: {
+            status
+        }
+    })
+
+    if (!p2pVideoPeer.instance) {
+        return dispatch({
+            type: AUDIO_TOGGLE_FAILURE,
+            payload: {
+                message: 'audio is not connected'
+            }
+        })
+    }
+
+    const track = p2pVideoPeer.localStream.getAudioTracks()[0]
+
+    track.enabled = status
+
+    return dispatch({
+        type: AUDIO_TOGGLE_SUCCESS,
+        payload: {
+            track,
+            status
+        }
+    })
 }

@@ -1,7 +1,14 @@
 const socket = require('./modules/socket')()
 const { state, getState, setUser, setP2pVideoPeer } = require('./store')
 const encryption = require('./helpers/encryption')
-const { startVideoCall, stopVideoCall, acceptVideoCall, rejectVideoCall } = require('./modules/p2p-video')
+const {
+    startVideoCall,
+    stopVideoCall,
+    acceptVideoCall,
+    rejectVideoCall,
+    toggleVideo,
+    toggleAudio
+} = require('./modules/p2p-video')
 
 const { startScreenShare, stopScreenShare, acceptScreenShare } = require('./modules/p2p-screen')
 
@@ -38,6 +45,9 @@ Ktalk.VideoCall.start = startVideoCall
 Ktalk.VideoCall.stop = stopVideoCall
 Ktalk.VideoCall.accept = acceptVideoCall
 Ktalk.VideoCall.reject = rejectVideoCall
+
+Ktalk.VideoCall.toggleVideo = toggleVideo
+Ktalk.VideoCall.toggleAudio = toggleAudio
 
 /** p2p screen share */
 Ktalk.ScreenShare = {}

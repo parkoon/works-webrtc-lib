@@ -1,6 +1,6 @@
 .button {
     display: inline-block;
-    width: 80px;
+    max-width: 120px;
     height: 40px;
     border: 1px solid #dbdbdb;
     color: #37474f;

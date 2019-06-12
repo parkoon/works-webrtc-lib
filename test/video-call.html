@@ -20,6 +20,10 @@
         </div>
         <button id="ktalk-video-start" class="button">시작</button>
         <button id="ktalk-video-stop" class="button">종료</button>
+        <button id="ktalk-video-on" class="button">비디오 ON</button>
+        <button id="ktalk-video-off" class="button">비디오 OFF</button>
+        <button id="ktalk-audio-on" class="button">오디오 ON</button>
+        <button id="ktalk-audio-off" class="button">오디오 OFF</button>
     </body>
 
     <script>
@@ -43,6 +47,19 @@
                 }
             }
         })
+
+        document.querySelector('#ktalk-video-on').onclick = () => {
+            Ktalk.VideoCall.toggleVideo(true)
+        }
+        document.querySelector('#ktalk-video-off').onclick = () => {
+            Ktalk.VideoCall.toggleVideo(false)
+        }
+        document.querySelector('#ktalk-audio-on').onclick = () => {
+            Ktalk.VideoCall.toggleAudio(true)
+        }
+        document.querySelector('#ktalk-audio-off').onclick = () => {
+            Ktalk.VideoCall.toggleAudio(false)
+        }
 
         document.querySelector('#ktalk-auth-login').onclick = () => {
             const id = document.querySelector('#ktalk-auth-id').value
